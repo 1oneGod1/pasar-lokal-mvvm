@@ -65,7 +65,12 @@ Memilih akun demo di layar login akan mengisi kredensial dan langsung mencoba ma
 
 ## Pengujian
 
-Widget test mencakup alur autentikasi pembeli dan penjual. Jalankan dengan perintah:
+Untuk AFL 3 (Unit & Widget Testing), project ini menyediakan:
+
+- **Unit test** untuk logika keranjang (perhitungan total & perubahan quantity) di `test/cart_repository_test.dart`.
+- **Widget test** untuk alur login pembeli & penjual di `test/widget_test.dart`.
+
+Semua test bisa dijalankan dengan perintah:
 
 ```bash
 flutter test
