@@ -11,6 +11,7 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final authViewModel = context.watch<AuthViewModel>();
     final user = authViewModel.currentUser;
 
@@ -33,20 +34,19 @@ class ProfilePage extends StatelessWidget {
     final initial = user.name.isNotEmpty ? user.name[0].toUpperCase() : '?';
     final memberSinceText = 'Member sejak ${user.memberSince.year}';
 
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return SafeArea(
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 24 + 96),
         children: [
           Row(
             children: [
               CircleAvatar(
                 radius: 32,
-                backgroundColor: Colors.black,
+                backgroundColor: scheme.primary,
                 child: Text(
                   initial,
                   style: theme.textTheme.headlineSmall?.copyWith(
-                    color: Colors.white,
+                    color: scheme.onPrimary,
                   ),
                 ),
               ),
@@ -111,12 +111,12 @@ class ProfilePage extends StatelessWidget {
                         authViewModel.isLoading ? null : authViewModel.logout,
                     child:
                         authViewModel.isLoading
-                            ? const SizedBox(
+                            ? SizedBox(
                               height: 20,
                               width: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Colors.white,
+                                color: scheme.onPrimary,
                               ),
                             )
                             : const Text('Keluar akun'),
@@ -181,6 +181,7 @@ class _StoreSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final sellerViewModel = context.watch<SellerViewModel>();
     final store =
         user.sellerId != null ? sellerViewModel.findById(user.sellerId!) : null;
@@ -203,10 +204,10 @@ class _StoreSummaryCard extends StatelessWidget {
               Row(
                 children: [
                   CircleAvatar(
-                    backgroundColor: Colors.black,
+                    backgroundColor: scheme.primary,
                     child: Text(
                       store.name.isNotEmpty ? store.name[0].toUpperCase() : '?',
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(color: scheme.onPrimary),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -230,17 +231,17 @@ class _StoreSummaryCard extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.black,
+                      color: scheme.primary,
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.star, size: 14, color: Colors.white),
+                        Icon(Icons.star, size: 14, color: scheme.onPrimary),
                         const SizedBox(width: 4),
                         Text(
                           store.rating.toStringAsFixed(1),
                           style: theme.textTheme.labelSmall?.copyWith(
-                            color: Colors.white,
+                            color: scheme.onPrimary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -259,16 +260,19 @@ class _StoreSummaryCard extends StatelessWidget {
             ],
             if (store != null) ...[
               const SizedBox(height: 16),
-              Row(
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
                 children: [
-                  Expanded(
+                  SizedBox(
+                    width: 160,
                     child: OutlinedButton(
                       onPressed: () {},
                       child: const Text('Lihat katalog'),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
+                  SizedBox(
+                    width: 160,
                     child: FilledButton(
                       onPressed: () {},
                       child: const Text('Kelola toko'),

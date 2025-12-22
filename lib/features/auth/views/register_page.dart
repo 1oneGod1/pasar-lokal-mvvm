@@ -1,74 +1,53 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:pasar_lokal_mvvm/core/models/demo_account.dart';
 import 'package:pasar_lokal_mvvm/features/auth/viewmodels/auth_view_model.dart';
-import 'package:pasar_lokal_mvvm/features/auth/views/register_page.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController(text: 'andi@example.com');
-  final _passwordController = TextEditingController(text: 'rahasia123');
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmController = TextEditingController();
+
   bool _obscurePassword = true;
-
-  void _showNotAvailableSnackBar() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Fitur belum tersedia untuk demo ini.')),
-    );
-  }
-
-  Future<void> _signInWithAccount(DemoAccount account) async {
-    final authViewModel = context.read<AuthViewModel>();
-    if (authViewModel.isLoading) {
-      return;
-    }
-
-    _emailController.text = account.email;
-    _passwordController.text = account.password;
-    authViewModel.clearError();
-    await _submit();
-  }
+  bool _obscureConfirm = true;
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmController.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
     final authViewModel = context.read<AuthViewModel>();
+
     if (_formKey.currentState?.validate() != true) {
       return;
     }
 
-    final success = await authViewModel.login(
-      _emailController.text,
-      _passwordController.text,
+    final success = await authViewModel.registerBuyer(
+      name: _nameController.text,
+      email: _emailController.text,
+      password: _passwordController.text,
     );
 
     if (!mounted) return;
 
-    if (!success && authViewModel.errorMessage != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(authViewModel.errorMessage!)));
+    if (success) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      return;
     }
-  }
-
-  Future<void> _submitGoogle() async {
-    final authViewModel = context.read<AuthViewModel>();
-    if (authViewModel.isLoading) return;
-
-    final success = await authViewModel.loginWithGoogle();
-    if (!mounted) return;
 
     if (!success && authViewModel.errorMessage != null) {
       ScaffoldMessenger.of(
@@ -108,33 +87,21 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       child: Row(
                         children: [
-                          Container(
-                            width: 46,
-                            height: 46,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: scheme.onPrimary.withValues(alpha: 0.18),
-                            ),
-                            child: Icon(
-                              Icons.storefront_rounded,
+                          IconButton(
+                            tooltip: 'Kembali',
+                            onPressed: () => Navigator.of(context).pop(),
+                            icon: Icon(
+                              Icons.arrow_back_rounded,
                               color: scheme.onPrimary,
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 6),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Pasar Lokal',
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    color: scheme.onPrimary,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Selamat Datang!',
+                                  'Daftar Akun',
                                   style: theme.textTheme.headlineSmall
                                       ?.copyWith(
                                         color: scheme.onPrimary,
@@ -143,7 +110,7 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  'Masuk untuk melanjutkan belanja.',
+                                  'Buat akun baru untuk mulai belanja.',
                                   style: theme.textTheme.bodyMedium?.copyWith(
                                     color: scheme.onPrimary.withValues(
                                       alpha: 0.92,
@@ -168,11 +135,40 @@ class _LoginPageState extends State<LoginPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              Text('Nama', style: theme.textTheme.bodySmall),
+                              const SizedBox(height: 6),
+                              TextFormField(
+                                controller: _nameController,
+                                textInputAction: TextInputAction.next,
+                                decoration: InputDecoration(
+                                  hintText: 'Nama lengkap',
+                                  prefixIcon: const Icon(Icons.person_outline),
+                                  border: inputBorder,
+                                  enabledBorder: inputBorder,
+                                  focusedBorder: inputBorder.copyWith(
+                                    borderSide: BorderSide(
+                                      color: scheme.primary,
+                                    ),
+                                  ),
+                                ),
+                                onChanged: (_) => authViewModel.clearError(),
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Nama tidak boleh kosong.';
+                                  }
+                                  if (value.trim().length < 3) {
+                                    return 'Nama minimal 3 karakter.';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 14),
                               Text('Email', style: theme.textTheme.bodySmall),
                               const SizedBox(height: 6),
                               TextFormField(
                                 controller: _emailController,
                                 keyboardType: TextInputType.emailAddress,
+                                textInputAction: TextInputAction.next,
                                 decoration: InputDecoration(
                                   hintText: 'nama@contoh.com',
                                   prefixIcon: const Icon(Icons.mail_outline),
@@ -204,6 +200,7 @@ class _LoginPageState extends State<LoginPage> {
                               TextFormField(
                                 controller: _passwordController,
                                 obscureText: _obscurePassword,
+                                textInputAction: TextInputAction.next,
                                 decoration: InputDecoration(
                                   hintText: 'Minimal 6 karakter',
                                   prefixIcon: const Icon(Icons.lock_outline),
@@ -238,13 +235,51 @@ class _LoginPageState extends State<LoginPage> {
                                   return null;
                                 },
                               ),
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: TextButton(
-                                  onPressed: _showNotAvailableSnackBar,
-                                  child: const Text('Lupa Password?'),
-                                ),
+                              const SizedBox(height: 14),
+                              Text(
+                                'Konfirmasi kata sandi',
+                                style: theme.textTheme.bodySmall,
                               ),
+                              const SizedBox(height: 6),
+                              TextFormField(
+                                controller: _confirmController,
+                                obscureText: _obscureConfirm,
+                                textInputAction: TextInputAction.done,
+                                decoration: InputDecoration(
+                                  hintText: 'Ulangi kata sandi',
+                                  prefixIcon: const Icon(Icons.lock_outline),
+                                  suffixIcon: IconButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        _obscureConfirm = !_obscureConfirm;
+                                      });
+                                    },
+                                    icon: Icon(
+                                      _obscureConfirm
+                                          ? Icons.visibility_outlined
+                                          : Icons.visibility_off_outlined,
+                                    ),
+                                  ),
+                                  border: inputBorder,
+                                  enabledBorder: inputBorder,
+                                  focusedBorder: inputBorder.copyWith(
+                                    borderSide: BorderSide(
+                                      color: scheme.primary,
+                                    ),
+                                  ),
+                                ),
+                                onChanged: (_) => authViewModel.clearError(),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Konfirmasi kata sandi wajib diisi.';
+                                  }
+                                  if (value != _passwordController.text) {
+                                    return 'Kata sandi tidak sama.';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 10),
                               if (authViewModel.errorMessage != null)
                                 Padding(
                                   padding: const EdgeInsets.only(bottom: 10),
@@ -271,82 +306,23 @@ class _LoginPageState extends State<LoginPage> {
                                               color: scheme.onPrimary,
                                             ),
                                           )
-                                          : const Text('Masuk'),
-                                ),
-                              ),
-                              const SizedBox(height: 14),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Divider(color: scheme.outline),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                    ),
-                                    child: Text(
-                                      'ATAU',
-                                      style: theme.textTheme.labelMedium
-                                          ?.copyWith(
-                                            color: scheme.outline,
-                                            fontWeight: FontWeight.w700,
-                                            letterSpacing: 0.5,
-                                          ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: Divider(color: scheme.outline),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 14),
-                              SizedBox(
-                                width: double.infinity,
-                                child: OutlinedButton.icon(
-                                  onPressed:
-                                      authViewModel.isLoading
-                                          ? null
-                                          : _submitGoogle,
-                                  icon: Container(
-                                    width: 28,
-                                    height: 28,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: scheme.surfaceContainerHighest,
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      'G',
-                                      style: theme.textTheme.labelLarge
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w800,
-                                          ),
-                                    ),
-                                  ),
-                                  label: const Text('Masuk dengan Google'),
+                                          : const Text('Daftar'),
                                 ),
                               ),
                               const SizedBox(height: 10),
-                              Wrap(
-                                alignment: WrapAlignment.center,
-                                crossAxisAlignment: WrapCrossAlignment.center,
-                                spacing: 6,
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
-                                    'Belum punya akun?',
+                                    'Sudah punya akun?',
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       color: scheme.outline,
                                     ),
                                   ),
                                   TextButton(
-                                    onPressed: () {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) => const RegisterPage(),
-                                        ),
-                                      );
-                                    },
-                                    child: const Text('Daftar Sekarang'),
+                                    onPressed:
+                                        () => Navigator.of(context).pop(),
+                                    child: const Text('Masuk'),
                                   ),
                                 ],
                               ),
@@ -355,103 +331,12 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                     ),
-                    if (authViewModel.demoAccounts.isNotEmpty) ...[
-                      const SizedBox(height: 16),
-                      _DemoAccountPanel(
-                        accounts: authViewModel.demoAccounts,
-                        onSelect:
-                            authViewModel.isLoading ? null : _signInWithAccount,
-                      ),
-                    ],
                   ],
                 );
               },
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _DemoAccountPanel extends StatelessWidget {
-  const _DemoAccountPanel({required this.accounts, required this.onSelect});
-
-  final List<DemoAccount> accounts;
-  final Future<void> Function(DemoAccount)? onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    if (accounts.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    final theme = Theme.of(context);
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Akun demo tersedia',
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 12),
-            ...accounts.map(
-              (account) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _DemoAccountTile(account: account, onSelect: onSelect),
-              ),
-            ),
-            Text(
-              'Pilih akun untuk mengisi otomatis email dan kata sandi.',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.outline,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _DemoAccountTile extends StatelessWidget {
-  const _DemoAccountTile({required this.account, required this.onSelect});
-
-  final DemoAccount account;
-  final Future<void> Function(DemoAccount)? onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final roleLabel = account.isSeller ? 'Penjual' : 'Pembeli';
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: CircleAvatar(
-        backgroundColor: scheme.primaryContainer,
-        child: Text(
-          account.name.isNotEmpty ? account.name[0].toUpperCase() : '?',
-          style: TextStyle(color: scheme.onPrimaryContainer),
-        ),
-      ),
-      title: Text(
-        '${account.name} • $roleLabel',
-        style: theme.textTheme.titleSmall?.copyWith(
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      subtitle: Text('${account.email}\nPassword: ${account.password}'),
-      isThreeLine: true,
-      trailing: TextButton(
-        onPressed:
-            onSelect == null ? null : () async => onSelect!.call(account),
-        child: const Text('Gunakan'),
       ),
     );
   }

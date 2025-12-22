@@ -9,8 +9,12 @@ import '../../../core/models/user.dart';
 import '../../auth/viewmodels/auth_view_model.dart';
 import '../../categories/viewmodels/category_view_model.dart';
 import '../../products/viewmodels/product_view_model.dart';
+import '../../products/views/product_detail_page.dart';
 import '../../sellers/viewmodels/seller_view_model.dart';
 import '../../orders/viewmodels/order_view_model.dart';
+import 'package:pasar_lokal_mvvm/features/cart/viewmodels/cart_view_model.dart';
+import 'package:pasar_lokal_mvvm/features/cart/views/cart_page.dart';
+import 'package:pasar_lokal_mvvm/main.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -70,78 +74,61 @@ class _DashboardPageState extends State<DashboardPage> {
                 .toList();
 
     final nearest = filteredProducts.take(6).toList();
-    final recommendations = filteredProducts.take(3).toList();
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _Header(theme: theme),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           _SearchField(theme: theme),
-          const SizedBox(height: 20),
+          const SizedBox(height: 22),
           _CategoryScroller(
             categories: categories,
             theme: theme,
             selectedCategoryId: _selectedCategoryId,
-            onSelected: (value) {
-              setState(() => _selectedCategoryId = value);
-            },
+            onSelected: (value) => setState(() => _selectedCategoryId = value),
           ),
-          const SizedBox(height: 24),
-          _SectionHeader(title: 'PALING DEKAT', onViewAll: () {}),
+          const SizedBox(height: 22),
+          _SectionHeader(
+            title: 'Tetangga Terdekat',
+            onViewAll: () => HomeTabScope.maybeOf(context)?.onSelectTab(1),
+          ),
           const SizedBox(height: 12),
-          SizedBox(
-            height: 170,
-            child:
-                nearest.isEmpty
-                    ? const _EmptyPlaceholder(
-                      message: 'Belum ada produk di sekitar Anda.',
-                    )
-                    : ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: nearest.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 12),
-                      itemBuilder: (context, index) {
-                        final product = nearest[index];
-                        final seller = _sellerFor(product, sellers);
-                        return _NearestProductCard(
-                          product: product,
-                          seller: seller,
-                        );
-                      },
-                    ),
-          ),
-          const SizedBox(height: 28),
-          Text(
-            'REKOMENDASI TETANGGA',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.6,
-            ),
-          ),
-          const SizedBox(height: 16),
-          if (recommendations.isEmpty)
+          if (nearest.isEmpty)
             const _EmptyPlaceholder(
-              message: 'Tambah produk untuk melihat rekomendasi.',
+              message: 'Belum ada produk di sekitar Anda.',
             )
           else
             Column(
               children:
-                  recommendations
+                  nearest
+                      .take(3)
                       .map(
                         (product) => Padding(
                           padding: const EdgeInsets.only(bottom: 16),
-                          child: _RecommendationCard(
+                          child: _NearestProductCard(
                             product: product,
                             seller: _sellerFor(product, sellers),
+                            onTap: () {
+                              final store = _sellerFor(product, sellers);
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder:
+                                      (_) => ProductDetailPage(
+                                        product: product,
+                                        seller: store,
+                                      ),
+                                ),
+                              );
+                            },
                           ),
                         ),
                       )
                       .toList(),
             ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
         ],
       ),
     );
@@ -163,6 +150,9 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = theme.colorScheme;
+    final cartCount = context.watch<CartViewModel>().itemCount;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -171,42 +161,32 @@ class _Header extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'LOKASI SAAT INI',
+                'Lokasi Anda',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 1.1,
+                  color: scheme.outline,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 6),
               Row(
                 children: [
-                  const Icon(Icons.location_on_rounded, size: 18),
+                  Icon(
+                    Icons.location_on_rounded,
+                    size: 18,
+                    color: scheme.primary,
+                  ),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      'Jl. Cendrawasih No. 10',
+                      'Kebayoran Baru',
                       style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      '< 3 KM',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                  Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: scheme.outline,
                   ),
                 ],
               ),
@@ -214,9 +194,45 @@ class _Header extends StatelessWidget {
           ),
         ),
         IconButton(
-          tooltip: 'Notifikasi',
-          onPressed: () {},
-          icon: const Icon(Icons.notifications_none_rounded),
+          tooltip: 'Keranjang',
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const CartPage()),
+            );
+          },
+          icon: Badge(
+            isLabelVisible: cartCount > 0,
+            label: Text('$cartCount'),
+            child: const Icon(Icons.shopping_cart_outlined),
+          ),
+        ),
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            IconButton(
+              tooltip: 'Notifikasi',
+              onPressed: () {},
+              icon: const Icon(Icons.shopping_bag_outlined),
+            ),
+            Positioned(
+              right: 6,
+              top: 6,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: scheme.primary,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  '2',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: scheme.onPrimary,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -230,13 +246,21 @@ class _SearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = theme.colorScheme;
+
     return TextField(
       decoration: InputDecoration(
-        hintText: 'Cari jajanan tetangga...',
-        prefixIcon: const Icon(Icons.search),
-        suffixIcon: IconButton(
-          icon: const Icon(Icons.tune_rounded),
-          onPressed: () {},
+        hintText: 'Cari soto, keripik, atau jasa...',
+        prefixIcon: const Icon(Icons.search_rounded),
+        filled: true,
+        fillColor: scheme.surfaceContainerHighest,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
         ),
       ),
     );
@@ -258,60 +282,125 @@ class _CategoryScroller extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          _CategoryChip(
-            label: 'Semua',
-            isSelected:
-                selectedCategoryId == _DashboardPageState._allCategoryId,
-            onTap: () => onSelected(_DashboardPageState._allCategoryId),
-          ),
-          const SizedBox(width: 8),
-          ...categories.map((category) {
-            final isSelected = category.id == selectedCategoryId;
-            return Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: _CategoryChip(
-                label: category.name,
-                isSelected: isSelected,
-                onTap: () => onSelected(category.id),
-              ),
-            );
-          }),
-        ],
+    final scheme = theme.colorScheme;
+
+    final shortcuts = <({String id, String label, IconData icon, Color bg})>[
+      (
+        id: _DashboardPageState._allCategoryId,
+        label: 'Makanan',
+        icon: Icons.restaurant_rounded,
+        bg: scheme.primary.withValues(alpha: 0.06),
       ),
+      (
+        id:
+            categories.any((c) => c.id == 'cat-spices')
+                ? 'cat-spices'
+                : _DashboardPageState._allCategoryId,
+        label: 'Jajanan',
+        icon: Icons.cookie_outlined,
+        bg: scheme.secondary.withValues(alpha: 0.06),
+      ),
+      (
+        id:
+            categories.any((c) => c.id == 'cat-handicraft')
+                ? 'cat-handicraft'
+                : _DashboardPageState._allCategoryId,
+        label: 'Kerajinan',
+        icon: Icons.content_cut_rounded,
+        bg: scheme.tertiary.withValues(alpha: 0.06),
+      ),
+      (
+        id:
+            categories.any((c) => c.id == 'cat-produce')
+                ? 'cat-produce'
+                : _DashboardPageState._allCategoryId,
+        label: 'Jasa',
+        icon: Icons.checkroom_outlined,
+        bg: scheme.primaryContainer.withValues(alpha: 0.06),
+      ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Kategori',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children:
+              shortcuts
+                  .map(
+                    (item) => _CategoryShortcut(
+                      theme: theme,
+                      label: item.label,
+                      icon: item.icon,
+                      backgroundColor: item.bg,
+                      selected: selectedCategoryId == item.id,
+                      onTap: () => onSelected(item.id),
+                    ),
+                  )
+                  .toList(),
+        ),
+      ],
     );
   }
 }
 
-class _CategoryChip extends StatelessWidget {
-  const _CategoryChip({
+class _CategoryShortcut extends StatelessWidget {
+  const _CategoryShortcut({
+    required this.theme,
     required this.label,
-    required this.isSelected,
+    required this.icon,
+    required this.backgroundColor,
+    required this.selected,
     required this.onTap,
   });
 
+  final ThemeData theme;
   final String label;
-  final bool isSelected;
+  final IconData icon;
+  final Color backgroundColor;
+  final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (_) => onTap(),
-      selectedColor: Colors.black,
-      backgroundColor: Colors.white,
-      labelStyle: TextStyle(
-        color: isSelected ? Colors.white : Colors.black,
-        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-      ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(999),
-        side: const BorderSide(color: Colors.black, width: 1.4),
+    final scheme = theme.colorScheme;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        child: Column(
+          children: [
+            Container(
+              width: 54,
+              height: 54,
+              decoration: BoxDecoration(
+                color: backgroundColor,
+                shape: BoxShape.circle,
+                border:
+                    selected
+                        ? Border.all(color: scheme.primary, width: 1.4)
+                        : null,
+              ),
+              child: Icon(icon, color: scheme.primary),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: selected ? FontWeight.w900 : FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -326,221 +415,185 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.7,
-              ),
+        Expanded(
+          child: Text(
+            title,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w900,
             ),
-            Text(
-              'Siap antar dalam hitungan menit',
-              style: theme.textTheme.bodySmall,
-            ),
-          ],
+          ),
         ),
         if (onViewAll != null)
-          TextButton(onPressed: onViewAll, child: const Text('Lihat Semua')),
+          TextButton.icon(
+            onPressed: onViewAll,
+            icon: Icon(Icons.map_outlined, color: scheme.primary),
+            label: Text(
+              'Lihat Peta',
+              style: TextStyle(
+                color: scheme.primary,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
       ],
     );
   }
 }
 
 class _NearestProductCard extends StatelessWidget {
-  const _NearestProductCard({required this.product, required this.seller});
+  const _NearestProductCard({
+    required this.product,
+    required this.seller,
+    required this.onTap,
+  });
 
   final Product product;
   final Seller? seller;
+  final VoidCallback onTap;
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return SizedBox(
-      width: 140,
-      child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        elevation: 1,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                height: 56,
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Center(
-                  child: Text(
-                    product.name,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyMedium,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ),
-              const Spacer(),
-              Text(
-                seller?.name ?? 'Warung tetangga',
-                style: theme.textTheme.bodySmall,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              Text(
-                _priceLabel(product.price),
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+  String _compactPrice(double price) {
+    if (price >= 1000) {
+      final value = (price / 1000).round();
+      return 'Rp${value}k';
+    }
+    return 'Rp${price.toStringAsFixed(0)}';
   }
-}
-
-class _RecommendationCard extends StatelessWidget {
-  const _RecommendationCard({required this.product, required this.seller});
-
-  final Product product;
-  final Seller? seller;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final sellerName = seller?.name ?? 'Warung tetangga';
+    final rating = seller?.rating ?? 4.8;
+
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            height: 180,
-            width: double.infinity,
-            child:
-                product.imageUrl.isEmpty
-                    ? Container(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      child: const Center(
-                        child: Icon(Icons.image_not_supported),
-                      ),
-                    )
-                    : Image.network(
-                      product.imageUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder:
-                          (_, __, ___) => Container(
-                            color: Colors.black.withValues(alpha: 0.08),
-                            child: const Center(
-                              child: Icon(Icons.image_not_supported),
-                            ),
-                          ),
-                    ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Stack(
               children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 16,
-                      backgroundColor: Colors.black,
-                      child: Text(
-                        seller == null ? '?' : seller!.name.characters.first,
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            seller?.name ?? 'Tetangga',
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
+                AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: Image.network(
+                    product.imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder:
+                        (_, __, ___) => Container(
+                          color: scheme.surfaceContainerHighest,
+                          child: Icon(
+                            Icons.image_outlined,
+                            color: scheme.outline,
                           ),
-                          Text(
-                            'JARAK 0.${(product.price % 5).round() + 2} KM',
-                            style: theme.textTheme.bodySmall,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Icon(Icons.copy_rounded, size: 18),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  product.name,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+                        ),
                   ),
                 ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Text(
-                      _priceLabel(product.price),
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+                Positioned(
+                  left: 12,
+                  bottom: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: scheme.surface,
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: scheme.outlineVariant),
+                    ),
+                    child: Text(
+                      '0.3 km',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.black,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.star, size: 14, color: Colors.white),
-                          const SizedBox(width: 4),
-                          Text(
-                            '4.8',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    OutlinedButton(onPressed: () {}, child: const Text('Chat')),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: () {},
-                        child: const Text('Beli'),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          product.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.storefront_outlined,
+                              size: 16,
+                              color: scheme.outline,
+                            ),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                sellerName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: scheme.outline,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.star_rounded,
+                              size: 18,
+                              color: scheme.primary,
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              rating.toStringAsFixed(1),
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: scheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      _compactPrice(product.price),
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -563,450 +616,469 @@ class _SellerDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final totalStock = products.fold<int>(
-      0,
-      (sum, product) => sum + product.stock,
-    );
-    final averagePrice =
-        products.isEmpty
-            ? 0.0
-            : products.fold<double>(
-                  0.0,
-                  (sum, product) => sum + product.price,
-                ) /
-                products.length;
-    final totalInventoryValue = products.fold<double>(
-      0.0,
-      (sum, product) => sum + (product.price * product.stock),
-    );
-    final pendingCount =
-        orders.where((order) => order.status == OrderStatus.pending).length;
-    final processingCount =
-        orders.where((order) => order.status == OrderStatus.processing).length;
-    final completedCount =
-        orders.where((order) => order.status == OrderStatus.completed).length;
-    final revenue = orders.fold<double>(0.0, (sum, order) => sum + order.total);
+    final scheme = theme.colorScheme;
 
+    final pendingOrders =
+        orders.where((order) => order.status == OrderStatus.pending).toList();
+    final completedRevenue = orders
+        .where((order) => order.status == OrderStatus.completed)
+        .fold<double>(0.0, (sum, order) => sum + order.total);
+
+    final sorted =
+        orders.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final incoming = sorted.take(6).toList();
+
+    final displayName = (store?.name ?? user.name).trim();
     final greetingName = user.name.split(' ').first;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Dashboard Penjual',
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Halo $greetingName, pantau performa tokomu hari ini.',
-            style: theme.textTheme.bodyMedium,
-          ),
-          const SizedBox(height: 20),
-          Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return Stack(
+      children: [
+        SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _SellerTopHeader(
+                greetingName: greetingName,
+                displayName: displayName,
+              ),
+              const SizedBox(height: 16),
+              Row(
                 children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 28,
-                        backgroundColor: Colors.black,
-                        child: Text(
-                          (store?.name ?? user.name).isNotEmpty
-                              ? (store?.name ?? user.name)[0].toUpperCase()
-                              : '?',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                          ),
-                        ),
+                  Expanded(
+                    child: _SellerSummaryCard(
+                      title: 'Pesanan Baru',
+                      value: pendingOrders.length.toString(),
+                      backgroundColor: scheme.primaryContainer,
+                      titleColor: scheme.primary,
+                      valueStyle: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: scheme.primary,
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              store?.name ?? 'Toko belum ditautkan',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              store?.location ??
-                                  'Hubungi admin untuk menautkan toko.',
-                              style: theme.textTheme.bodySmall,
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (store != null)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black,
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.star,
-                                size: 14,
-                                color: Colors.white,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                store!.rating.toStringAsFixed(1),
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {},
-                          icon: const Icon(Icons.store_mall_directory_outlined),
-                          label: const Text('Lihat etalase'),
-                        ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _SellerSummaryCard(
+                      title: 'Pendapatan',
+                      value: _compactRupiah(completedRevenue),
+                      backgroundColor: scheme.secondaryContainer,
+                      titleColor: scheme.secondary,
+                      valueStyle: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: scheme.secondary,
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: FilledButton.icon(
-                          onPressed: () {},
-                          icon: const Icon(Icons.add_circle_outline),
-                          label: const Text('Tambah produk'),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              _SellerStatCard(
-                title: 'Produk aktif',
-                value: products.length.toString(),
-                subtitle: 'Total listing',
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Pesanan Masuk',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed:
+                        () => HomeTabScope.maybeOf(context)?.onSelectTab(2),
+                    child: const Text('Lihat Semua'),
+                  ),
+                ],
               ),
-              _SellerStatCard(
-                title: 'Total stok',
-                value: totalStock.toString(),
-                subtitle: 'Unit tersedia',
-              ),
-              _SellerStatCard(
-                title: 'Harga rata-rata',
-                value: _priceLabel(averagePrice),
-                subtitle: 'Per produk',
-              ),
-              _SellerStatCard(
-                title: 'Nilai stok',
-                value: _priceLabel(totalInventoryValue),
-                subtitle: 'Estimasi rupiah',
-              ),
+              const SizedBox(height: 12),
+              if (incoming.isEmpty)
+                const _EmptyPlaceholder(message: 'Belum ada pesanan masuk.')
+              else
+                Column(
+                  children: [
+                    for (final order in incoming) ...[
+                      _SellerOrderCard(
+                        order: order,
+                        onReject:
+                            () => context.read<OrderViewModel>().deleteOrder(
+                              order.id,
+                            ),
+                        onAccept:
+                            () => context.read<OrderViewModel>().updateStatus(
+                              order.id,
+                              OrderStatus.processing,
+                            ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                  ],
+                ),
             ],
           ),
-          const SizedBox(height: 20),
-          _SellerOrdersSummary(
-            theme: theme,
-            pending: pendingCount,
-            processing: processingCount,
-            completed: completedCount,
-            revenue: revenue,
+        ),
+        Positioned(
+          right: 16,
+          bottom: 16,
+          child: FloatingActionButton(
+            onPressed: () {},
+            backgroundColor: scheme.primary,
+            foregroundColor: scheme.onPrimary,
+            child: const Icon(Icons.add),
           ),
-          const SizedBox(height: 20),
-          _SellerProductList(theme: theme, products: products),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
-class _SellerStatCard extends StatelessWidget {
-  const _SellerStatCard({
-    required this.title,
-    required this.value,
-    required this.subtitle,
+class _SellerTopHeader extends StatelessWidget {
+  const _SellerTopHeader({
+    required this.greetingName,
+    required this.displayName,
   });
 
-  final String title;
-  final String value;
-  final String subtitle;
+  final String greetingName;
+  final String displayName;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return SizedBox(
-      width: 160,
-      child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
+    final scheme = theme.colorScheme;
+    final initials = _initials(displayName);
+    final greeting = _timeGreeting(DateTime.now());
+
+    return Row(
+      children: [
+        CircleAvatar(
+          radius: 22,
+          backgroundColor: scheme.surfaceContainerHighest,
+          child: Text(
+            initials,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                title,
+                '$greeting,',
                 style: theme.textTheme.bodySmall?.copyWith(
+                  color: scheme.outline,
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 2),
               Text(
-                value,
+                '$greetingName 👋',
                 style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w900,
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(subtitle, style: theme.textTheme.bodySmall),
             ],
           ),
         ),
-      ),
+        _NotificationBell(),
+      ],
     );
+  }
+
+  String _timeGreeting(DateTime now) {
+    final hour = now.hour;
+    if (hour < 11) return 'Selamat Pagi';
+    if (hour < 15) return 'Selamat Siang';
+    if (hour < 19) return 'Selamat Sore';
+    return 'Selamat Malam';
+  }
+
+  String _initials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty);
+    final list = parts.toList();
+    if (list.isEmpty) return '?';
+    final first = list.first.characters.first.toUpperCase();
+    final second =
+        list.length > 1 ? list[1].characters.first.toUpperCase() : '';
+    return '$first$second';
   }
 }
 
-class _SellerOrdersSummary extends StatelessWidget {
-  const _SellerOrdersSummary({
-    required this.theme,
-    required this.pending,
-    required this.processing,
-    required this.completed,
-    required this.revenue,
-  });
-
-  final ThemeData theme;
-  final int pending;
-  final int processing;
-  final int completed;
-  final double revenue;
-
+class _NotificationBell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Status Pesanan',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _OrderStatusPill(
-                    label: 'Pending',
-                    value: pending,
-                    icon: Icons.watch_later_outlined,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _OrderStatusPill(
-                    label: 'Proses',
-                    value: processing,
-                    icon: Icons.local_shipping_outlined,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _OrderStatusPill(
-                    label: 'Selesai',
-                    value: completed,
-                    icon: Icons.check_circle_outline,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Potensi omzet',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    _priceLabel(revenue),
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        IconButton(
+          onPressed: () {},
+          icon: const Icon(Icons.notifications_none_rounded),
         ),
-      ),
+        Positioned(
+          right: 10,
+          top: 10,
+          child: Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: scheme.error,
+              shape: BoxShape.circle,
+              border: Border.all(color: scheme.surface, width: 2),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
 
-class _OrderStatusPill extends StatelessWidget {
-  const _OrderStatusPill({
-    required this.label,
+class _SellerSummaryCard extends StatelessWidget {
+  const _SellerSummaryCard({
+    required this.title,
     required this.value,
-    required this.icon,
+    required this.backgroundColor,
+    this.titleColor,
+    required this.valueStyle,
   });
 
-  final String label;
-  final int value;
-  final IconData icon;
+  final String title;
+  final String value;
+  final Color backgroundColor;
+  final Color? titleColor;
+  final TextStyle? valueStyle;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.1)),
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: scheme.outlineVariant),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text('$value pesanan', style: theme.textTheme.bodySmall),
-              ],
+          Text(
+            title,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: titleColor ?? scheme.outline,
+              fontWeight: FontWeight.w700,
             ),
           ),
+          const SizedBox(height: 10),
+          Text(value, style: valueStyle),
         ],
       ),
     );
   }
 }
 
-class _SellerProductList extends StatelessWidget {
-  const _SellerProductList({required this.theme, required this.products});
+class _SellerOrderCard extends StatelessWidget {
+  const _SellerOrderCard({
+    required this.order,
+    required this.onReject,
+    required this.onAccept,
+  });
 
-  final ThemeData theme;
-  final List<Product> products;
+  final Order order;
+  final VoidCallback onReject;
+  final VoidCallback onAccept;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Produk Anda',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    final isCompleted = order.status == OrderStatus.completed;
+    final (buyerName, distanceKm, note) = _demoBuyerMeta(order.id);
+
+    final firstItem = order.items.isNotEmpty ? order.items.first : null;
+    final title =
+        firstItem == null
+            ? 'Pesanan'
+            : '${firstItem.quantity}x ${firstItem.product.name}';
+    final subtitle = 'Pemesan: $buyerName (${distanceKm.toStringAsFixed(1)}km)';
+
+    return Opacity(
+      opacity: isCompleted ? 0.55 : 1,
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: scheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(Icons.restaurant, color: scheme.outline),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: scheme.outline,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  _OrderStatusChip(status: order.status),
+                ],
+              ),
+              if (!isCompleted) ...[
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: scheme.outlineVariant),
+                    color: scheme.surface,
+                  ),
+                  child: Text(
+                    '"$note"',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontStyle: FontStyle.italic,
+                      color: scheme.onSurface,
+                    ),
                   ),
                 ),
-                TextButton(onPressed: () {}, child: const Text('Kelola')),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: onReject,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: scheme.error,
+                          side: BorderSide(color: scheme.error),
+                        ),
+                        child: const Text('Tolak'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: onAccept,
+                        child: const Text('Terima Order'),
+                      ),
+                    ),
+                  ],
+                ),
               ],
-            ),
-            const SizedBox(height: 12),
-            if (products.isEmpty)
-              const _EmptyPlaceholder(
-                message: 'Tambah produk pertama Anda untuk mulai berjualan.',
-              )
-            else
-              Column(
-                children:
-                    products
-                        .map(
-                          (product) => Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: _SellerProductTile(product: product),
-                          ),
-                        )
-                        .toList(),
-              ),
-          ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  (String buyerName, double distanceKm, String note) _demoBuyerMeta(
+    String seed,
+  ) {
+    const buyers = ['Mas Rian', 'Mbak Ani', 'Mas Dito', 'Mbak Sasa'];
+    const notes = [
+      'Bu, sambalnya yang pedes banget ya!',
+      'Tolong bungkus rapi ya, makasih!',
+      'Kalau bisa cepat ya bu, lagi lapar.',
+      'Jangan pakai bawang goreng ya.',
+    ];
+
+    final hash = seed.codeUnits.fold<int>(0, (sum, c) => sum + c);
+    final buyer = buyers[hash % buyers.length];
+    final note = notes[hash % notes.length];
+    final distance = 0.2 + ((hash % 7) / 10.0); // 0.2 - 0.8km
+    return (buyer, distance, note);
+  }
+}
+
+class _OrderStatusChip extends StatelessWidget {
+  const _OrderStatusChip({required this.status});
+
+  final OrderStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    final (label, bg, fg) = switch (status) {
+      OrderStatus.pending => (
+        'Baru',
+        scheme.tertiaryContainer,
+        scheme.onTertiaryContainer,
+      ),
+      OrderStatus.processing => (
+        'Diproses',
+        scheme.primaryContainer,
+        scheme.onPrimaryContainer,
+      ),
+      OrderStatus.completed => (
+        'Selesai',
+        scheme.surfaceContainerHighest,
+        scheme.outline,
+      ),
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: scheme.outlineVariant),
+      ),
+      child: Text(
+        label,
+        style: theme.textTheme.labelSmall?.copyWith(
+          fontWeight: FontWeight.w900,
+          color: fg,
         ),
       ),
     );
   }
 }
 
-class _SellerProductTile extends StatelessWidget {
-  const _SellerProductTile({required this.product});
-
-  final Product product;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.08)),
-      ),
-      child: ListTile(
-        title: Text(
-          product.name,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        subtitle: Text('${_priceLabel(product.price)} • Stok ${product.stock}'),
-        trailing: const Icon(Icons.edit_outlined),
-        onTap: () {},
-      ),
-    );
+String _compactRupiah(double value) {
+  final intValue = value.round();
+  if (intValue >= 1000000) {
+    final jt = intValue / 1000000.0;
+    return 'Rp${jt.toStringAsFixed(jt >= 10 ? 0 : 1)}jt';
   }
+  if (intValue >= 1000) {
+    final rb = (intValue / 1000.0).round();
+    return 'Rp${rb}rb';
+  }
+  return 'Rp$intValue';
 }
 
 class _EmptyPlaceholder extends StatelessWidget {
@@ -1016,18 +1088,16 @@ class _EmptyPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.1)),
+        border: Border.all(color: scheme.outlineVariant),
       ),
       child: Center(child: Text(message, textAlign: TextAlign.center)),
     );
   }
-}
-
-String _priceLabel(double price) {
-  return 'Rp ${price.toStringAsFixed(0)}';
 }

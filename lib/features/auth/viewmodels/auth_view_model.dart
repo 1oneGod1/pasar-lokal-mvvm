@@ -68,6 +68,70 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
+  Future<bool> registerBuyer({
+    required String name,
+    required String email,
+    required String password,
+  }) async {
+    if (_isLoading) return false;
+
+    _setLoading(true);
+    _errorMessage = null;
+
+    try {
+      final user = await _repository.registerBuyer(
+        name: name,
+        email: email,
+        password: password,
+      );
+
+      if (user == null) {
+        _errorMessage = 'Email sudah terdaftar. Gunakan email lain ya.';
+        _setLoading(false);
+        notifyListeners();
+        return false;
+      }
+
+      _currentUser = user;
+      _errorMessage = null;
+      _setLoading(false);
+      notifyListeners();
+      return true;
+    } catch (error) {
+      _errorMessage = 'Gagal daftar. Pastikan data sudah benar.';
+      _setLoading(false);
+      notifyListeners();
+      if (kDebugMode) {
+        print('Register error: $error');
+      }
+      return false;
+    }
+  }
+
+  Future<bool> loginWithGoogle() async {
+    if (_isLoading) return false;
+
+    _setLoading(true);
+    _errorMessage = null;
+
+    try {
+      final user = await _repository.loginWithGoogle();
+      _currentUser = user;
+      _errorMessage = null;
+      _setLoading(false);
+      notifyListeners();
+      return true;
+    } catch (error) {
+      _errorMessage = 'Gagal masuk dengan Google. Coba lagi ya.';
+      _setLoading(false);
+      notifyListeners();
+      if (kDebugMode) {
+        print('Google login error: $error');
+      }
+      return false;
+    }
+  }
+
   void _setLoading(bool value) {
     _isLoading = value;
   }

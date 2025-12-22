@@ -6,6 +6,8 @@ import 'package:pasar_lokal_mvvm/core/models/user.dart';
 class AuthRepository {
   AuthRepository();
 
+  static const _googleEmail = 'google.user@pasarlokal.id';
+
   final List<_UserCredential> _credentials = [
     _UserCredential(
       email: 'andi@example.com',
@@ -65,7 +67,7 @@ class AuthRepository {
 
   Future<User?> login(String email, String password) async {
     await Future<void>.delayed(const Duration(milliseconds: 600));
-    final normalizedEmail = email.trim().toLowerCase();
+    final normalizedEmail = _normalizeEmail(email);
     for (final credential in _credentials) {
       if (credential.email == normalizedEmail &&
           credential.password == password) {
@@ -75,9 +77,81 @@ class AuthRepository {
     return null;
   }
 
+  Future<User> loginWithGoogle() async {
+    await Future<void>.delayed(const Duration(milliseconds: 650));
+
+    final normalizedEmail = _normalizeEmail(_googleEmail);
+    final existing = _credentials.where((c) => c.email == normalizedEmail);
+    if (existing.isNotEmpty) {
+      return existing.first.user;
+    }
+
+    final now = DateTime.now();
+    final user = User(
+      id: 'user-google',
+      name: 'Google User',
+      email: normalizedEmail,
+      phone: '-',
+      address: '-',
+      memberSince: now,
+      role: UserRole.buyer,
+    );
+
+    _credentials.add(
+      _UserCredential(email: normalizedEmail, password: '<google>', user: user),
+    );
+
+    return user;
+  }
+
+  Future<User?> registerBuyer({
+    required String name,
+    required String email,
+    required String password,
+  }) async {
+    await Future<void>.delayed(const Duration(milliseconds: 700));
+
+    final normalizedEmail = _normalizeEmail(email);
+    final trimmedName = name.trim();
+
+    if (trimmedName.isEmpty) {
+      throw ArgumentError('Nama tidak boleh kosong.');
+    }
+    if (normalizedEmail.isEmpty || !normalizedEmail.contains('@')) {
+      throw ArgumentError('Email tidak valid.');
+    }
+    if (password.length < 6) {
+      throw ArgumentError('Kata sandi minimal 6 karakter.');
+    }
+
+    final exists = _credentials.any((c) => c.email == normalizedEmail);
+    if (exists) {
+      return null;
+    }
+
+    final now = DateTime.now();
+    final user = User(
+      id: 'user-${now.microsecondsSinceEpoch}',
+      name: trimmedName,
+      email: normalizedEmail,
+      phone: '-',
+      address: '-',
+      memberSince: now,
+      role: UserRole.buyer,
+    );
+
+    _credentials.add(
+      _UserCredential(email: normalizedEmail, password: password, user: user),
+    );
+
+    return user;
+  }
+
   Future<void> logout() async {
     await Future<void>.delayed(const Duration(milliseconds: 200));
   }
+
+  String _normalizeEmail(String email) => email.trim().toLowerCase();
 }
 
 class _UserCredential {

@@ -4,11 +4,12 @@ Pasar Lokal MVVM adalah prototipe marketplace lingkungan berbasis Flutter 3.7 ya
 
 ## Sorotan Fitur
 
-- **Antarmuka abu-abu** sesuai mockup AFL1 dengan navigasi bawah (`Beranda`, `Peta`, `Pesanan`, `Akun`).
+- Antarmuka **Material 3** dengan tema **hijau** (seed color) dan navigasi bawah (`Beranda`, `Peta`, `Pesanan`, `Akun`).
 - **Alur pembeli** mencakup eksplorasi produk, pengelolaan keranjang, checkout, dan pelacakan pesanan.
 - **Dashboard penjual** menampilkan KPI toko, ringkasan stok, serta pipeline pesanan saat login sebagai penjual.
 - **Tab peta** menggunakan [`flutter_map`](https://pub.dev/packages/flutter_map) + OpenStreetMap untuk memvisualisasikan penjual terdekat.
 - **Lapisan MVVM yang dapat digunakan ulang** (model, repository, viewmodel) dengan `provider` untuk injeksi dependensi dan pembaruan state.
+- Auth demo: **Login pembeli/penjual**, **Daftar (register)**, dan **Masuk dengan Google (demo/non-Firebase)**.
 
 ## Ringkasan Arsitektur
 
@@ -65,16 +66,87 @@ Memilih akun demo di layar login akan mengisi kredensial dan langsung mencoba ma
 
 ## Pengujian
 
-Untuk AFL 3 (Unit & Widget Testing), project ini menyediakan:
+Untuk AFL 3 (Unit & Widget Testing), project ini menyediakan (dan sudah dapat dijalankan):
 
-- **Unit test** untuk logika keranjang (perhitungan total & perubahan quantity) di `test/cart_repository_test.dart`.
+- **Unit test** untuk logika keranjang di `test/cart_repository_test.dart`.
+  - **Logika yang diuji (isolated/testable):** `CartRepository` menghitung total, menggabungkan item duplikat (quantity bertambah), dan menghapus item saat quantity = 0.
+  - **Pola Arrange–Act–Assert:**
+    - Arrange: membuat `CartRepository` + data `Product`.
+    - Act: memanggil `addItem()` / `updateQuantity()`.
+    - Assert: memverifikasi `items`, `quantity`, dan `total` dengan `expect(...)`.
 - **Widget test** untuk alur login pembeli & penjual di `test/widget_test.dart`.
+  - Menguji tampilan login muncul pertama, tombol `Masuk` membawa user ke beranda, dan akun demo penjual membuka dashboard penjual.
 
 Semua test bisa dijalankan dengan perintah:
 
 ```bash
 flutter test
 ```
+
+### Detail AFL 3 (Unit & Widget Testing)
+
+Bagian ini ditulis untuk memenuhi instruksi AFL 3: memilih satu fitur yang bisa diuji, menentukan logic yang bisa dites secara terisolasi, lalu menulis unit test dan (opsional) widget test.
+
+#### 1) Feature yang dipilih
+
+**Keranjang belanja (Cart)**.
+
+Di aplikasi ini, keranjang dipakai untuk menampung produk sebelum checkout, menghitung total, mengubah quantity, dan menghasilkan `Order` saat checkout.
+
+**Akses UI keranjang:** ikon keranjang + badge jumlah item tersedia di Beranda (header) dan di Detail Produk.
+
+#### 2) Testable logic (yang bisa diuji terisolasi)
+
+Logic yang dites berada pada lapisan data (in-memory) di `lib/core/repositories/cart_repository.dart` (dibungkus oleh `CartViewModel`).
+
+Alasan cocok untuk unit test:
+
+- Tidak perlu UI untuk membuktikan perilakunya.
+- Input/aksi jelas (`addItem`, `updateQuantity`) dan output/state jelas (`items`, `total`).
+
+#### 3) Unit test yang dibuat
+
+**File:** `test/cart_repository_test.dart`
+
+Test cases yang ada (beserta Arrange–Act–Assert):
+
+1. **calculates total and merges duplicate items**
+  - Arrange: buat `CartRepository` + 1 `Product`.
+  - Act: panggil `addItem(product)` dua kali.
+  - Assert: `items.length == 1`, quantity jadi 2, dan `total == price * 2`.
+
+2. **removes item when quantity set to zero**
+  - Arrange: buat repo + tambah 1 item.
+  - Act: panggil `updateQuantity(cartItemId, 0)`.
+  - Assert: `items` kosong dan `total == 0`.
+
+3. **sums totals across multiple products**
+  - Arrange: buat repo + dua `Product` dengan harga berbeda.
+  - Act: tambah A sekali, tambah B dua kali.
+  - Assert: `total` sama dengan penjumlahan semua subtotal.
+
+#### 4) Widget test (tambahan)
+
+**File:** `test/widget_test.dart`
+
+Widget test yang ada membantu membuktikan flow UI utama:
+
+- Layar login tampil pertama.
+- Tombol `Masuk` login sebagai pembeli dan aplikasi merender beranda + bottom nav.
+- Akun demo penjual bisa login dan masuk ke dashboard penjual.
+
+#### 5) Cara menjalankan (untuk penilaian)
+
+```bash
+flutter test
+```
+
+#### 6) Pemetaan ke Rubric AFL 3
+
+- **Functionality selection (30%)**: Keranjang adalah fitur dengan aturan bisnis jelas (quantity, total, merge item).
+- **Test case structure (30%)**: Unit test mengikuti pola Arrange–Act–Assert di tiap kasus.
+- **Test coverage (20%)**: Mencakup 3 perilaku inti: merge item, perhitungan total, dan penghapusan saat qty=0.
+- **Code clarity (20%)**: Nama test case deskriptif, dan assertion menggunakan `expect(...)` secara langsung.
 
 > ℹ️ Tab peta memakai ubin OpenStreetMap. Saat test, mungkin muncul peringatan terkait subdomain ubin; tidak berpengaruh pada fungsi, namun Anda bisa mengganti ke pola host tunggal (`https://tile.openstreetmap.org/{z}/{x}/{y}.png`) bila ingin.
 

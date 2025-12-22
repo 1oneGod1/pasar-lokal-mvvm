@@ -8,7 +8,7 @@ void main() {
     await tester.pumpWidget(const PasarLokalApp());
     await tester.pump();
 
-    expect(find.text('Selamat datang kembali!'), findsOneWidget);
+    expect(find.text('Selamat Datang!'), findsOneWidget);
     expect(find.text('Masuk'), findsOneWidget);
     expect(find.byType(NavigationBar), findsNothing);
   });
@@ -21,7 +21,8 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 700));
 
-    expect(find.text('LOKASI SAAT INI'), findsWidgets);
+    expect(find.text('Lokasi Anda'), findsWidgets);
+    expect(find.text('Kebayoran Baru'), findsWidgets);
     expect(find.byType(NavigationBar), findsOneWidget);
     expect(find.text('Beranda'), findsWidgets);
     expect(find.text('Peta'), findsOneWidget);
@@ -34,6 +35,11 @@ void main() {
     await tester.pump();
 
     final sellerTile = find.text('Putri Siregar • Penjual');
+    await tester.scrollUntilVisible(
+      sellerTile,
+      200,
+      scrollable: find.byType(Scrollable).at(0),
+    );
     expect(sellerTile, findsOneWidget);
 
     final sellerListTile = find.ancestor(
@@ -52,7 +58,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 700));
 
-    expect(find.text('Dashboard Penjual'), findsOneWidget);
-    expect(find.text('Produk Anda'), findsOneWidget);
+    expect(find.textContaining('Selamat'), findsWidgets);
+    expect(find.text('Pesanan Masuk'), findsOneWidget);
   });
 }
