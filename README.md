@@ -135,18 +135,12 @@ Widget test yang ada membantu membuktikan flow UI utama:
 - Tombol `Masuk` login sebagai pembeli dan aplikasi merender beranda + bottom nav.
 - Akun demo penjual bisa login dan masuk ke dashboard penjual.
 
-#### 5) Cara menjalankan (untuk penilaian)
+#### 5) Cara menjalankan
 
 ```bash
 flutter test
 ```
 
-#### 6) Pemetaan ke Rubric AFL 3
-
-- **Functionality selection (30%)**: Keranjang adalah fitur dengan aturan bisnis jelas (quantity, total, merge item).
-- **Test case structure (30%)**: Unit test mengikuti pola Arrange–Act–Assert di tiap kasus.
-- **Test coverage (20%)**: Mencakup 3 perilaku inti: merge item, perhitungan total, dan penghapusan saat qty=0.
-- **Code clarity (20%)**: Nama test case deskriptif, dan assertion menggunakan `expect(...)` secara langsung.
 
 > ℹ️ Tab peta memakai ubin OpenStreetMap. Saat test, mungkin muncul peringatan terkait subdomain ubin; tidak berpengaruh pada fungsi, namun Anda bisa mengganti ke pola host tunggal (`https://tile.openstreetmap.org/{z}/{x}/{y}.png`) bila ingin.
 
