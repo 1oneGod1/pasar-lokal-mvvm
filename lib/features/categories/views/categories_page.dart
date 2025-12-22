@@ -147,6 +147,12 @@ class CategoriesPage extends StatelessWidget {
       },
     );
 
+    if (!context.mounted) {
+      nameController.dispose();
+      descriptionController.dispose();
+      return;
+    }
+
     nameController.dispose();
     descriptionController.dispose();
   }
@@ -171,6 +177,10 @@ class CategoriesPage extends StatelessWidget {
         );
       },
     );
+
+    if (!context.mounted) {
+      return;
+    }
 
     if (confirmed == true) {
       context.read<CategoryViewModel>().deleteCategory(category.id);

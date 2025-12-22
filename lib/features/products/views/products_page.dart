@@ -341,6 +341,10 @@ class ProductsPage extends StatelessWidget {
       },
     );
 
+    if (!context.mounted) {
+      return;
+    }
+
     if (confirmed == true) {
       context.read<ProductViewModel>().deleteProduct(product.id);
       ScaffoldMessenger.of(

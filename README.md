@@ -12,12 +12,12 @@ Pasar Lokal MVVM adalah prototipe marketplace lingkungan berbasis Flutter 3.7 ya
 
 ## Ringkasan Arsitektur
 
-| Lapisan        | Deskripsi |
-| -------------- | --------- |
-| **Models**     | Objek Dart sederhana di `lib/core/models` mendeskripsikan entitas seperti `Product`, `Order`, `MapLocation`, dan `User` (dengan peran pembeli/penjual). |
-| **Repositories** | Penyimpanan in-memory di `lib/core/repositories` memuat data contoh dan logika CRUD. Dapat diganti dengan API atau basis data nyata. |
-| **ViewModels** | Kelas `ChangeNotifier` di `lib/features/**/viewmodels` menerjemahkan data repository menjadi state siap pakai, mengekspose aturan bisnis, serta mengoordinasikan alur fitur. |
-| **Views**      | Layar dan widget Material 3 di `lib/features/**/views` berlangganan provider dan merender UI reaktif. |
+| Lapisan          | Deskripsi                                                                                                                                                                    |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Models**       | Objek Dart sederhana di `lib/core/models` mendeskripsikan entitas seperti `Product`, `Order`, `MapLocation`, dan `User` (dengan peran pembeli/penjual).                      |
+| **Repositories** | Penyimpanan in-memory di `lib/core/repositories` memuat data contoh dan logika CRUD. Dapat diganti dengan API atau basis data nyata.                                         |
+| **ViewModels**   | Kelas `ChangeNotifier` di `lib/features/**/viewmodels` menerjemahkan data repository menjadi state siap pakai, mengekspose aturan bisnis, serta mengoordinasikan alur fitur. |
+| **Views**        | Layar dan widget Material 3 di `lib/features/**/views` berlangganan provider dan merender UI reaktif.                                                                        |
 
 ### Struktur Proyek
 
@@ -43,11 +43,11 @@ lib/
 
 Kredensial demo tersimpan di `AuthRepository`.
 
-| Peran    | Email                        | Kata sandi   | Catatan |
-| -------- | ---------------------------- | ------------ | ------- |
-| Pembeli  | `andi@example.com`           | `rahasia123` | Sudah terisi di form login. |
-| Pembeli  | `sari@example.com`           | `belanja123` | Pakai tombol demo untuk mengisi otomatis. |
-| Penjual  | `putri.seller@pasarlokal.id` | `spicehouse` | Mengakses dashboard penjual milik Putri Spice House. |
+| Peran   | Email                        | Kata sandi   | Catatan                                              |
+| ------- | ---------------------------- | ------------ | ---------------------------------------------------- |
+| Pembeli | `andi@example.com`           | `rahasia123` | Sudah terisi di form login.                          |
+| Pembeli | `sari@example.com`           | `belanja123` | Pakai tombol demo untuk mengisi otomatis.            |
+| Penjual | `putri.seller@pasarlokal.id` | `spicehouse` | Mengakses dashboard penjual milik Putri Spice House. |
 
 Memilih akun demo di layar login akan mengisi kredensial dan langsung mencoba masuk.
 
@@ -55,13 +55,13 @@ Memilih akun demo di layar login akan mengisi kredensial dan langsung mencoba ma
 
 1. Pasang Flutter **3.7.2** atau yang lebih baru lalu tambahkan ke `PATH`.
 2. Ambil seluruh paket:
-	```bash
-	flutter pub get
-	```
+   ```bash
+   flutter pub get
+   ```
 3. Jalankan di Chrome (web) atau perangkat/emulator lain:
-	```bash
-	flutter run -d chrome
-	```
+   ```bash
+   flutter run -d chrome
+   ```
 
 ## Pengujian
 
@@ -78,4 +78,3 @@ flutter test
 - Data contoh masih tersimpan di memori. Ganti repository dengan sumber data jarak jauh bila ingin persistensi.
 - Marker peta berasal dari `MapRepository`; hubungkan dengan backend atau layanan geolokasi untuk data real-time.
 - Aksi penjual (`Kelola toko`, `Lihat katalog`) masih menjadi placeholder untuk fitur berikutnya.
-

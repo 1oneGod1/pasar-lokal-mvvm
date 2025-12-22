@@ -190,6 +190,10 @@ class SellersPage extends StatelessWidget {
       },
     );
 
+    if (!context.mounted) {
+      return;
+    }
+
     if (confirmed == true) {
       context.read<SellerViewModel>().deleteSeller(seller.id);
       ScaffoldMessenger.of(

@@ -132,6 +132,10 @@ class OrdersPage extends StatelessWidget {
       },
     );
 
+    if (!context.mounted) {
+      return;
+    }
+
     if (confirmed == true) {
       context.read<OrderViewModel>().deleteOrder(order.id);
       ScaffoldMessenger.of(
