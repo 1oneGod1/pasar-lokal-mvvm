@@ -40,6 +40,19 @@ lib/
   main.dart            // Bootstrap MultiProvider + auth gate + navigasi
 ```
 
+### Arsitektur “Decoupled / Headless” (Disesuaikan)
+
+Di project ini, **UI (Views)** dibuat _tidak bergantung pada sumber data spesifik_. UI hanya membaca state + memicu aksi lewat **ViewModel**, sementara detail data ada di **Repository**.
+
+- **Wiring dependensi ada di satu tempat:** `lib/main.dart` memakai `MultiProvider` untuk membuat viewmodel + repository, misalnya `AuthViewModel(AuthRepository())`, `CartViewModel(CartRepository())`, `ProductViewModel(ProductRepository())`, `OrderViewModel(OrderRepository())`, `MapViewModel(MapRepository())`.
+- **UI hanya bicara ke ViewModel:** contoh alur keranjang, UI memanggil method di `CartViewModel` (`addToCart`, `incrementQuantity`, `checkout`) tanpa tahu apakah data keranjang disimpan di memori, database, atau API.
+- **Repository bersifat “headless” (tanpa UI):** repository/viewmodel bisa dijalankan dan diuji tanpa widget. Contoh nyatanya ada pada unit test `test/cart_repository_test.dart` yang menguji `CartRepository` langsung (total, merge item, remove saat qty=0).
+
+Kalau nanti ingin mengganti data in-memory menjadi API/DB:
+
+- Titik perubahan utama ada di `lib/core/repositories/*` (implementasi sumber data) dan **wiring** di `lib/main.dart`.
+- **Views** di `lib/features/**/views` idealnya tidak perlu berubah karena tetap berinteraksi lewat ViewModel.
+
 ## Akun Demo Pembeli & Penjual
 
 Kredensial demo tersimpan di `AuthRepository`.
@@ -111,19 +124,22 @@ Alasan cocok untuk unit test:
 Test cases yang ada (beserta Arrange–Act–Assert):
 
 1. **calculates total and merges duplicate items**
-  - Arrange: buat `CartRepository` + 1 `Product`.
-  - Act: panggil `addItem(product)` dua kali.
-  - Assert: `items.length == 1`, quantity jadi 2, dan `total == price * 2`.
+
+- Arrange: buat `CartRepository` + 1 `Product`.
+- Act: panggil `addItem(product)` dua kali.
+- Assert: `items.length == 1`, quantity jadi 2, dan `total == price * 2`.
 
 2. **removes item when quantity set to zero**
-  - Arrange: buat repo + tambah 1 item.
-  - Act: panggil `updateQuantity(cartItemId, 0)`.
-  - Assert: `items` kosong dan `total == 0`.
+
+- Arrange: buat repo + tambah 1 item.
+- Act: panggil `updateQuantity(cartItemId, 0)`.
+- Assert: `items` kosong dan `total == 0`.
 
 3. **sums totals across multiple products**
-  - Arrange: buat repo + dua `Product` dengan harga berbeda.
-  - Act: tambah A sekali, tambah B dua kali.
-  - Assert: `total` sama dengan penjumlahan semua subtotal.
+
+- Arrange: buat repo + dua `Product` dengan harga berbeda.
+- Act: tambah A sekali, tambah B dua kali.
+- Assert: `total` sama dengan penjumlahan semua subtotal.
 
 #### 4) Widget test (tambahan)
 
@@ -141,8 +157,18 @@ Widget test yang ada membantu membuktikan flow UI utama:
 flutter test
 ```
 
+> ℹ️ Tab peta memakai ubin OpenStreetMap. Hindari trafik berlebihan pada server publik.
 
-> ℹ️ Tab peta memakai ubin OpenStreetMap. Saat test, mungkin muncul peringatan terkait subdomain ubin; tidak berpengaruh pada fungsi, namun Anda bisa mengganti ke pola host tunggal (`https://tile.openstreetmap.org/{z}/{x}/{y}.png`) bila ingin.
+## Dokumentasi (AFL)
+
+Template dan draft laporan untuk memenuhi requirement usability testing dan report disediakan di folder `docs/`:
+
+- `docs/00_project_scope.md` — scope, fitur inti, definition of done
+- `docs/01_usability_test_plan.md` — rencana test (3 user) + skenario + pertanyaan
+- `docs/02_usability_test_results.md` — template hasil (P1–P3) + ringkasan temuan + perbaikan
+- `docs/03_report_draft.md` — draft report 2–3 halaman (siap diekspor ke PDF)
+
+Untuk ekspor ke PDF, gunakan VS Code extension “Markdown PDF” atau Print to PDF dari preview Markdown.
 
 ## Catatan & Pengembangan Lanjutan
 

@@ -1,12 +1,30 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:pasar_lokal_mvvm/core/models/demo_account.dart';
+import 'package:pasar_lokal_mvvm/core/models/auth_session.dart';
 import 'package:pasar_lokal_mvvm/core/models/user.dart';
+import 'package:pasar_lokal_mvvm/core/storage/local_store.dart';
+import 'package:pasar_lokal_mvvm/core/storage/storage_mappers.dart';
 
 class AuthRepository {
-  AuthRepository();
+  AuthRepository({LocalStore? store, GoogleSignIn? googleSignIn})
+    : _store = store,
+      _googleSignIn =
+          googleSignIn ??
+          GoogleSignIn(
+            scopes: const ['email', 'profile'],
+            clientId:
+                kIsWeb
+                    ? const String.fromEnvironment('GOOGLE_WEB_CLIENT_ID')
+                    : null,
+          );
 
-  static const _googleEmail = 'google.user@pasarlokal.id';
+  static const _sessionKey = 'auth.session.v1';
+
+  final LocalStore? _store;
+  final GoogleSignIn _googleSignIn;
 
   final List<_UserCredential> _credentials = [
     _UserCredential(
@@ -65,31 +83,139 @@ class AuthRepository {
         .toList(growable: false);
   }
 
-  Future<User?> login(String email, String password) async {
+  AuthSession? get cachedSession {
+    final store = _store;
+    if (store == null) {
+      return null;
+    }
+
+    final raw = store.read<dynamic>(_sessionKey);
+    if (raw is! Map) {
+      return null;
+    }
+
+    final providerRaw = (raw['provider'] ?? '').toString();
+    final provider = switch (providerRaw) {
+      'google' => AuthProviderType.google,
+      _ => AuthProviderType.password,
+    };
+
+    final userRaw = raw['user'];
+    if (userRaw is! Map<dynamic, dynamic>) {
+      return null;
+    }
+
+    final user = userFromMap(userRaw);
+    final token = raw['token']?.toString();
+    return AuthSession(user: user, provider: provider, sessionToken: token);
+  }
+
+  Future<void> _writeSession(AuthSession session) async {
+    final store = _store;
+    if (store == null) {
+      return;
+    }
+
+    await store.write(_sessionKey, {
+      'provider':
+          session.provider == AuthProviderType.google ? 'google' : 'password',
+      'token': session.sessionToken,
+      'user': userToMap(session.user),
+      'updatedAt': DateTime.now().millisecondsSinceEpoch,
+    });
+  }
+
+  Future<void> _clearSession() async {
+    final store = _store;
+    if (store == null) {
+      return;
+    }
+    await store.remove(_sessionKey);
+  }
+
+  /// Attempts to restore & refresh a persisted session.
+  ///
+  /// - For password sessions, returns the cached session.
+  /// - For Google sessions, performs `signInSilently()` to refresh tokens.
+  Future<AuthSession?> restoreSession() async {
+    final cached = cachedSession;
+    if (cached == null) {
+      return null;
+    }
+
+    if (cached.provider != AuthProviderType.google) {
+      return cached;
+    }
+
+    final account = await _googleSignIn.signInSilently();
+    if (account == null) {
+      await _clearSession();
+      return null;
+    }
+
+    final auth = await account.authentication;
+    final token = auth.idToken ?? auth.accessToken;
+
+    final user = User(
+      id: 'google-${account.id}',
+      name: account.displayName ?? 'Google User',
+      email: _normalizeEmail(account.email),
+      phone: '-',
+      address: '-',
+      memberSince: cached.user.memberSince,
+      role: cached.user.role,
+      sellerId: cached.user.sellerId,
+    );
+
+    final refreshed = AuthSession(
+      user: user,
+      provider: AuthProviderType.google,
+      sessionToken: token,
+    );
+    await _writeSession(refreshed);
+    return refreshed;
+  }
+
+  Future<AuthSession?> login(String email, String password) async {
     await Future<void>.delayed(const Duration(milliseconds: 600));
     final normalizedEmail = _normalizeEmail(email);
     for (final credential in _credentials) {
       if (credential.email == normalizedEmail &&
           credential.password == password) {
-        return credential.user;
+        final session = AuthSession(
+          user: credential.user,
+          provider: AuthProviderType.password,
+          sessionToken:
+              'demo-${credential.user.id}-${DateTime.now().millisecondsSinceEpoch}',
+        );
+        await _writeSession(session);
+        return session;
       }
     }
     return null;
   }
 
-  Future<User> loginWithGoogle() async {
-    await Future<void>.delayed(const Duration(milliseconds: 650));
-
-    final normalizedEmail = _normalizeEmail(_googleEmail);
-    final existing = _credentials.where((c) => c.email == normalizedEmail);
-    if (existing.isNotEmpty) {
-      return existing.first.user;
+  Future<AuthSession> loginWithGoogle() async {
+    if (kIsWeb &&
+        const String.fromEnvironment('GOOGLE_WEB_CLIENT_ID').trim().isEmpty) {
+      throw StateError(
+        'GOOGLE_WEB_CLIENT_ID belum di-set. Jalankan dengan --dart-define=GOOGLE_WEB_CLIENT_ID=...',
+      );
     }
 
+    final account = await _googleSignIn.signIn();
+    if (account == null) {
+      throw StateError('AUTH_CANCELLED');
+    }
+
+    final auth = await account.authentication;
+    final token = auth.idToken ?? auth.accessToken;
+
+    final normalizedEmail = _normalizeEmail(account.email);
     final now = DateTime.now();
     final user = User(
-      id: 'user-google',
-      name: 'Google User',
+      id: 'google-${account.id}',
+      name: account.displayName ?? 'Google User',
       email: normalizedEmail,
       phone: '-',
       address: '-',
@@ -97,14 +223,16 @@ class AuthRepository {
       role: UserRole.buyer,
     );
 
-    _credentials.add(
-      _UserCredential(email: normalizedEmail, password: '<google>', user: user),
+    final session = AuthSession(
+      user: user,
+      provider: AuthProviderType.google,
+      sessionToken: token,
     );
-
-    return user;
+    await _writeSession(session);
+    return session;
   }
 
-  Future<User?> registerBuyer({
+  Future<AuthSession?> registerBuyer({
     required String name,
     required String email,
     required String password,
@@ -144,11 +272,24 @@ class AuthRepository {
       _UserCredential(email: normalizedEmail, password: password, user: user),
     );
 
-    return user;
+    final session = AuthSession(
+      user: user,
+      provider: AuthProviderType.password,
+      sessionToken: 'demo-${user.id}-${now.millisecondsSinceEpoch}',
+    );
+    await _writeSession(session);
+    return session;
   }
 
   Future<void> logout() async {
     await Future<void>.delayed(const Duration(milliseconds: 200));
+
+    final cached = cachedSession;
+    if (cached?.provider == AuthProviderType.google) {
+      await _googleSignIn.signOut();
+    }
+
+    await _clearSession();
   }
 
   String _normalizeEmail(String email) => email.trim().toLowerCase();

@@ -14,7 +14,8 @@ import '../../sellers/viewmodels/seller_view_model.dart';
 import '../../orders/viewmodels/order_view_model.dart';
 import 'package:pasar_lokal_mvvm/features/cart/viewmodels/cart_view_model.dart';
 import 'package:pasar_lokal_mvvm/features/cart/views/cart_page.dart';
-import 'package:pasar_lokal_mvvm/main.dart';
+import 'package:pasar_lokal_mvvm/core/widgets/home_tab_scope.dart';
+import 'package:pasar_lokal_mvvm/features/notifications/views/notifications_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -153,88 +154,105 @@ class _Header extends StatelessWidget {
     final scheme = theme.colorScheme;
     final cartCount = context.watch<CartViewModel>().itemCount;
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Lokasi Anda',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: scheme.outline,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Row(
-                children: [
-                  Icon(
-                    Icons.location_on_rounded,
-                    size: 18,
-                    color: scheme.primary,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: scheme.outlineVariant),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Lokasi Anda',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: scheme.outline,
+                    fontWeight: FontWeight.w800,
                   ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      'Kebayoran Baru',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w900,
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.location_on_rounded,
+                      size: 18,
+                      color: scheme.primary,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Kebayoran Baru',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                     ),
+                    Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: scheme.outline,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: 'Keranjang',
+            onPressed: () {
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const CartPage()));
+            },
+            icon: Badge(
+              isLabelVisible: cartCount > 0,
+              label: Text('$cartCount'),
+              child: const Icon(Icons.shopping_cart_outlined),
+            ),
+          ),
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              IconButton(
+                tooltip: 'Notifikasi',
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const NotificationsPage(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.shopping_bag_outlined),
+              ),
+              Positioned(
+                right: 6,
+                top: 6,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
                   ),
-                  Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    color: scheme.outline,
+                  decoration: BoxDecoration(
+                    color: scheme.primary,
+                    borderRadius: BorderRadius.circular(999),
                   ),
-                ],
+                  child: Text(
+                    '2',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: scheme.onPrimary,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
-        ),
-        IconButton(
-          tooltip: 'Keranjang',
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const CartPage()),
-            );
-          },
-          icon: Badge(
-            isLabelVisible: cartCount > 0,
-            label: Text('$cartCount'),
-            child: const Icon(Icons.shopping_cart_outlined),
-          ),
-        ),
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            IconButton(
-              tooltip: 'Notifikasi',
-              onPressed: () {},
-              icon: const Icon(Icons.shopping_bag_outlined),
-            ),
-            Positioned(
-              right: 6,
-              top: 6,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: scheme.primary,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  '2',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: scheme.onPrimary,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -248,19 +266,39 @@ class _SearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = theme.colorScheme;
 
-    return TextField(
-      decoration: InputDecoration(
-        hintText: 'Cari soto, keripik, atau jasa...',
-        prefixIcon: const Icon(Icons.search_rounded),
-        filled: true,
-        fillColor: scheme.surfaceContainerHighest,
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: scheme.primary.withValues(alpha: 0.2),
+          width: 1.5,
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
+        boxShadow: [
+          BoxShadow(
+            color: scheme.primary.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: TextField(
+        decoration: InputDecoration(
+          hintText: 'Cari produk lokal favoritmu...',
+          hintStyle: theme.textTheme.bodyMedium?.copyWith(
+            color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+          ),
+          prefixIcon: Icon(
+            Icons.search_rounded,
+            size: 26,
+            color: scheme.primary,
+          ),
+          suffixIcon: Icon(Icons.tune_rounded, color: scheme.onSurfaceVariant),
+          filled: false,
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(vertical: 16),
         ),
       ),
     );
@@ -379,24 +417,43 @@ class _CategoryShortcut extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
         child: Column(
           children: [
-            Container(
-              width: 54,
-              height: 54,
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 64,
+              height: 64,
               decoration: BoxDecoration(
-                color: backgroundColor,
-                shape: BoxShape.circle,
+                color: selected ? scheme.primaryContainer : backgroundColor,
+                borderRadius: BorderRadius.circular(18),
                 border:
                     selected
-                        ? Border.all(color: scheme.primary, width: 1.4)
+                        ? Border.all(
+                          color: scheme.primary.withValues(alpha: 0.3),
+                          width: 2,
+                        )
+                        : null,
+                boxShadow:
+                    selected
+                        ? [
+                          BoxShadow(
+                            color: scheme.primary.withValues(alpha: 0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
                         : null,
               ),
-              child: Icon(icon, color: scheme.primary),
+              child: Icon(
+                icon,
+                color: selected ? scheme.primary : scheme.onSurfaceVariant,
+                size: 28,
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             Text(
               label,
-              style: theme.textTheme.bodySmall?.copyWith(
+              style: theme.textTheme.labelMedium?.copyWith(
                 fontWeight: selected ? FontWeight.w900 : FontWeight.w600,
+                color: selected ? scheme.primary : scheme.onSurface,
               ),
             ),
           ],
@@ -470,7 +527,11 @@ class _NearestProductCard extends StatelessWidget {
     final rating = seller?.rating ?? 4.8;
 
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.5)),
+      ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
@@ -720,7 +781,7 @@ class _SellerDashboard extends StatelessWidget {
           right: 16,
           bottom: 16,
           child: FloatingActionButton(
-            onPressed: () {},
+            onPressed: () => _openAddProductSheet(context),
             backgroundColor: scheme.primary,
             foregroundColor: scheme.onPrimary,
             child: const Icon(Icons.add),
@@ -728,6 +789,235 @@ class _SellerDashboard extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Future<void> _openAddProductSheet(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final categories = context.read<CategoryViewModel>().categories;
+
+    if (categories.isEmpty) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Buat kategori terlebih dahulu.')),
+      );
+      return;
+    }
+
+    final formKey = GlobalKey<FormState>();
+    final nameController = TextEditingController();
+    final priceController = TextEditingController();
+    final stockController = TextEditingController();
+    final imageUrlController = TextEditingController();
+    final descriptionController = TextEditingController();
+
+    String selectedCategoryId = categories.first.id;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        final bottomInset = MediaQuery.of(sheetContext).viewInsets.bottom;
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottomInset),
+            child: StatefulBuilder(
+              builder: (context, setState) {
+                return Form(
+                  key: formKey,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Tambah Produk',
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: 'Tutup',
+                              onPressed: () => Navigator.of(sheetContext).pop(),
+                              icon: const Icon(Icons.close_rounded),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          'Isi detail produk yang akan dijual.',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.outline,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: nameController,
+                          decoration: const InputDecoration(
+                            labelText: 'Nama produk',
+                            prefixIcon: Icon(Icons.inventory_2_outlined),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Nama produk wajib diisi.';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: priceController,
+                                keyboardType: TextInputType.number,
+                                decoration: const InputDecoration(
+                                  labelText: 'Harga (Rp)',
+                                  prefixIcon: Icon(Icons.payments_outlined),
+                                ),
+                                validator: (value) {
+                                  final parsed = double.tryParse(
+                                    (value ?? '').trim(),
+                                  );
+                                  if (parsed == null || parsed <= 0) {
+                                    return 'Harga tidak valid.';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: TextFormField(
+                                controller: stockController,
+                                keyboardType: TextInputType.number,
+                                decoration: const InputDecoration(
+                                  labelText: 'Stok',
+                                  prefixIcon: Icon(Icons.numbers_outlined),
+                                ),
+                                validator: (value) {
+                                  final parsed = int.tryParse(
+                                    (value ?? '').trim(),
+                                  );
+                                  if (parsed == null || parsed < 0) {
+                                    return 'Stok tidak valid.';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<String>(
+                          value: selectedCategoryId,
+                          decoration: const InputDecoration(
+                            labelText: 'Kategori',
+                            prefixIcon: Icon(Icons.category_outlined),
+                          ),
+                          items:
+                              categories
+                                  .map(
+                                    (category) => DropdownMenuItem(
+                                      value: category.id,
+                                      child: Text(category.name),
+                                    ),
+                                  )
+                                  .toList(),
+                          onChanged: (value) {
+                            if (value == null) return;
+                            setState(() => selectedCategoryId = value);
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: imageUrlController,
+                          decoration: const InputDecoration(
+                            labelText: 'URL foto (opsional)',
+                            prefixIcon: Icon(Icons.image_outlined),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: descriptionController,
+                          maxLines: 3,
+                          decoration: const InputDecoration(
+                            labelText: 'Deskripsi (opsional)',
+                            alignLabelWithHint: true,
+                            prefixIcon: Icon(Icons.notes_outlined),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton(
+                            onPressed: () {
+                              if (formKey.currentState?.validate() != true) {
+                                return;
+                              }
+
+                              final price =
+                                  double.tryParse(
+                                    priceController.text.trim(),
+                                  ) ??
+                                  0;
+                              final stock =
+                                  int.tryParse(stockController.text.trim()) ??
+                                  0;
+
+                              final created = Product(
+                                id:
+                                    'prod-${DateTime.now().millisecondsSinceEpoch}',
+                                name: nameController.text.trim(),
+                                categoryId: selectedCategoryId,
+                                sellerId: user.sellerId ?? '',
+                                price: price,
+                                stock: stock,
+                                description: descriptionController.text.trim(),
+                                imageUrl: imageUrlController.text.trim(),
+                              );
+
+                              context.read<ProductViewModel>().addProduct(
+                                created,
+                              );
+                              messenger.showSnackBar(
+                                SnackBar(
+                                  content: Text('${created.name} ditambahkan.'),
+                                ),
+                              );
+                              Navigator.of(sheetContext).pop();
+                            },
+                            style: FilledButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            child: const Text('Simpan Produk'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+
+    nameController.dispose();
+    priceController.dispose();
+    stockController.dispose();
+    imageUrlController.dispose();
+    descriptionController.dispose();
   }
 }
 
@@ -773,7 +1063,7 @@ class _SellerTopHeader extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                '$greetingName 👋',
+                greetingName,
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w900,
                 ),
@@ -815,7 +1105,11 @@ class _NotificationBell extends StatelessWidget {
       clipBehavior: Clip.none,
       children: [
         IconButton(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const NotificationsPage()),
+            );
+          },
           icon: const Icon(Icons.notifications_none_rounded),
         ),
         Positioned(
@@ -1088,16 +1382,43 @@ class _EmptyPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: scheme.outlineVariant),
+        color: scheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
       ),
-      child: Center(child: Text(message, textAlign: TextAlign.center)),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: scheme.primaryContainer.withValues(alpha: 0.3),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.inventory_2_outlined,
+              size: 40,
+              color: scheme.primary.withValues(alpha: 0.6),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 }

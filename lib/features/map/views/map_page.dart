@@ -54,8 +54,7 @@ class MapPage extends StatelessWidget {
                   children: [
                     TileLayer(
                       urlTemplate:
-                          'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                      subdomains: const ['a', 'b', 'c'],
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                       userAgentPackageName: 'com.pasar_lokal.app',
                     ),
                     MarkerLayer(markers: viewModel.markers),

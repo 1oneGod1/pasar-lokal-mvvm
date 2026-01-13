@@ -101,32 +101,40 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(18),
+                      padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: scheme.primary,
-                        borderRadius: BorderRadius.circular(22),
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: scheme.primary.withValues(alpha: 0.3),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Row(
                         children: [
                           Container(
-                            width: 46,
-                            height: 46,
+                            width: 52,
+                            height: 52,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: scheme.onPrimary.withValues(alpha: 0.18),
+                              color: scheme.onPrimary.withValues(alpha: 0.2),
                             ),
                             child: Icon(
                               Icons.storefront_rounded,
                               color: scheme.onPrimary,
+                              size: 28,
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 14),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Pasar Lokal',
+                                  'PasarLokal',
                                   style: theme.textTheme.titleMedium?.copyWith(
                                     color: scheme.onPrimary,
                                     fontWeight: FontWeight.w700,

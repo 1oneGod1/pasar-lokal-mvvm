@@ -8,7 +8,8 @@ plugins {
 android {
     namespace = "com.example.pasar_lokal_mvvm"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // Keep in sync with plugin requirements.
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

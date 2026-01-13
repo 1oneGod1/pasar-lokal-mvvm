@@ -1,0 +1,38 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pasar}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pasar}
+      POSTGRES_DB: ${POSTGRES_DB:-pasarlokal}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    image: golang:1.22
+    working_dir: /app
+    volumes:
+      - ./:/app
+    environment:
+      ENV: ${ENV:-dev}
+      HOST: ${HOST:-0.0.0.0}
+      PORT: ${PORT:-8080}
+      DATABASE_URL: ${DATABASE_URL:-postgres://pasar:pasar@db:5432/pasarlokal?sslmode=disable}
+      XENDIT_CALLBACK_TOKEN: ${XENDIT_CALLBACK_TOKEN:-}
+    ports:
+      - "${PORT:-8080}:${PORT:-8080}"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["go", "run", "./cmd/api"]
+
+volumes:
+  db_data:

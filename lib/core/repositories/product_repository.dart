@@ -1,8 +1,18 @@
 import 'dart:collection';
 
 import '../models/product.dart';
+import '../storage/local_store.dart';
+import '../storage/storage_mappers.dart';
 
 class ProductRepository {
+  ProductRepository({LocalStore? store}) : _store = store {
+    _restoreOrSeed();
+  }
+
+  static const _storageKey = 'products.v1';
+
+  final LocalStore? _store;
+
   final List<Product> _products = [
     const Product(
       id: 'prod-mango',
@@ -39,6 +49,33 @@ class ProductRepository {
     ),
   ];
 
+  void _restoreOrSeed() {
+    final store = _store;
+    if (store == null) {
+      return;
+    }
+
+    final raw = store.read<dynamic>(_storageKey);
+    if (raw is List && raw.isNotEmpty) {
+      _products
+        ..clear()
+        ..addAll(raw.whereType<Map<dynamic, dynamic>>().map(productFromMap));
+      return;
+    }
+
+    _persist();
+  }
+
+  Future<void> _persist() async {
+    final store = _store;
+    if (store == null) {
+      return;
+    }
+
+    final payload = _products.map(productToMap).toList(growable: false);
+    await store.write(_storageKey, payload);
+  }
+
   UnmodifiableListView<Product> get products => UnmodifiableListView(_products);
 
   Product? findById(String id) {
@@ -57,6 +94,7 @@ class ProductRepository {
 
   void create(Product product) {
     _products.add(product);
+    _persist();
   }
 
   void update(Product product) {
@@ -65,9 +103,11 @@ class ProductRepository {
       throw ArgumentError('Product not found for id ${product.id}');
     }
     _products[index] = product;
+    _persist();
   }
 
   void delete(String id) {
     _products.removeWhere((item) => item.id == id);
+    _persist();
   }
 }

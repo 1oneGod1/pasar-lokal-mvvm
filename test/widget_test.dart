@@ -8,7 +8,7 @@ void main() {
     await tester.pumpWidget(const PasarLokalApp());
     await tester.pump();
 
-    expect(find.text('Selamat Datang!'), findsOneWidget);
+    expect(find.text('PasarLokal'), findsOneWidget);
     expect(find.text('Masuk'), findsOneWidget);
     expect(find.byType(NavigationBar), findsNothing);
   });
@@ -17,9 +17,11 @@ void main() {
     await tester.pumpWidget(const PasarLokalApp());
     await tester.pump();
 
-    await tester.tap(find.text('Masuk'));
+    final loginButton = find.text('Masuk');
+    await tester.ensureVisible(loginButton);
+    await tester.tap(loginButton);
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 700));
+    await tester.pump(const Duration(milliseconds: 800));
 
     expect(find.text('Lokasi Anda'), findsWidgets);
     expect(find.text('Kebayoran Baru'), findsWidgets);
@@ -51,14 +53,16 @@ void main() {
       matching: find.widgetWithText(TextButton, 'Gunakan'),
     );
 
-    await tester.ensureVisible(useButton);
+    await tester.dragUntilVisible(
+      useButton,
+      find.byType(Scrollable).first,
+      const Offset(0, -250),
+    );
     await tester.pump();
-
     await tester.tap(useButton);
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 700));
+    await tester.pump(const Duration(milliseconds: 1000));
 
-    expect(find.textContaining('Selamat'), findsWidgets);
     expect(find.text('Pesanan Masuk'), findsOneWidget);
   });
 }
