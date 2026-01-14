@@ -2,6 +2,14 @@
 
 > Isi bagian yang masih placeholder sesuai hasil real Anda.
 
+## Rubric Checklist (pastikan terisi)
+
+- [ ] Peserta minimal 3 orang (P1–P3)
+- [ ] Ada 5–6 task inti (login, cari/buka produk, add cart, lihat cart, checkout, navigasi)
+- [ ] Ada data success/help/time + catatan
+- [ ] Ada temuan utama + rencana perbaikan
+- [ ] Ada minimal 1–2 perubahan yang benar-benar diterapkan setelah testing
+
 ## Summary Findings (ringkas)
 
 - Temuan 1: [contoh] tombol/ikon search kurang menonjol
@@ -49,5 +57,11 @@ Keterangan:
 
 ## Changes Applied After Testing
 
-- Perubahan 1: [isi] (sertakan screenshot before/after jika ada)
-- Perubahan 2: [isi]
+- Perubahan 1:
+   - Temuan: [isi]
+   - Perubahan yang dilakukan: [isi]
+   - Bukti: [nama screenshot / catatan commit]
+- Perubahan 2:
+   - Temuan: [isi]
+   - Perubahan yang dilakukan: [isi]
+   - Bukti: [nama screenshot / catatan commit]

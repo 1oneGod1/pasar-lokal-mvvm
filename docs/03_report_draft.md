@@ -4,6 +4,10 @@
 
 Pasar Lokal MVVM adalah prototipe marketplace berbasis Flutter yang bertujuan membantu pengguna menemukan dan membeli produk lokal secara cepat, sekaligus memberi tampilan dashboard sederhana untuk penjual.
 
+**Problem / Need (ringkas):**
+
+- [Isi 2–3 kalimat masalah yang kamu temukan + bagaimana aplikasi ini membantu]
+
 **Target pengguna**:
 
 - Pembeli yang ingin eksplorasi produk lokal + checkout
@@ -50,6 +54,12 @@ Basic moderated usability test + think-aloud.
 
 3 orang pengguna baru (lihat detail pada file hasil).
 
+Ringkas profil peserta (contoh):
+
+- P1: [role/umur/kebiasaan]
+- P2: [role/umur/kebiasaan]
+- P3: [role/umur/kebiasaan]
+
 ### Tasks
 
 Login, cari produk, tambah keranjang, lihat keranjang, checkout, navigasi tab.
@@ -65,7 +75,10 @@ Ringkasan hasil ada di `docs/02_usability_test_results.md`.
 
 ### Improvements Applied
 
-- [Isi perubahan berdasarkan feedback]
+- Perubahan 1: [temuan → perubahan] (sertakan screenshot jika ada)
+- Perubahan 2: [temuan → perubahan]
+
+Catatan: minimal 1–2 perbaikan setelah testing agar memenuhi requirement “adjustments based on feedback”.
 
 ## 6) Challenges
 
@@ -74,8 +87,8 @@ Ringkasan hasil ada di `docs/02_usability_test_results.md`.
 
 ## 7) Repository & Screenshots
 
-- Source code: [tempel link repo di sini]
-- Screenshot: [tempel di sini / atau taruh di folder `docs/screenshots`]
+- Source code: [ISI_LINK_REPO_DI_SINI]
+- Screenshots: taruh di folder `docs/screenshots/` (contoh nama file ada di `docs/screenshots/README.md`)
 
 ## How to export to PDF
 

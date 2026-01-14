@@ -2,6 +2,19 @@
 
 Pasar Lokal MVVM adalah prototipe marketplace lingkungan berbasis Flutter 3.7 yang menerapkan pola **Model–View–ViewModel (MVVM)** dari hulu ke hilir. Proyek ini memperlihatkan bagaimana memisahkan tampilan, logika domain, dan akses data sambil menyajikan pengalaman pembeli dan penjual dalam satu codebase.
 
+## Objective (sesuai tugas)
+
+Mengembangkan aplikasi mobile sederhana namun fungsional yang menjawab kebutuhan: **membantu pembeli menemukan dan membeli produk lokal dengan cepat** (aliran inti buyer), dengan menerapkan:
+
+- prinsip desain dasar (separation of concerns, single responsibility)
+- pola arsitektur sederhana (MVVM)
+- usability testing dasar (≥ 3 user)
+- decoupling tingkat awal (UI terpisah dari logika bisnis)
+
+## Problem / Need
+
+Pembeli sering kesulitan menemukan produk lokal terdekat/terpercaya dengan cepat. Aplikasi ini menyediakan prototipe katalog produk lokal, keranjang, checkout, dan riwayat pesanan dalam satu flow sederhana.
+
 ## Sorotan Fitur
 
 - Antarmuka **Material 3** dengan tema **hijau** (seed color) dan navigasi bawah (`Beranda`, `Peta`, `Pesanan`, `Akun`).
@@ -10,6 +23,18 @@ Pasar Lokal MVVM adalah prototipe marketplace lingkungan berbasis Flutter 3.7 ya
 - **Tab peta** menggunakan [`flutter_map`](https://pub.dev/packages/flutter_map) + OpenStreetMap untuk memvisualisasikan penjual terdekat.
 - **Lapisan MVVM yang dapat digunakan ulang** (model, repository, viewmodel) dengan `provider` untuk injeksi dependensi dan pembaruan state.
 - Auth demo: **Login pembeli/penjual**, **Daftar (register)**, dan **Masuk dengan Google (demo/non-Firebase)**.
+
+## Core Scope (yang dinilai / fokus 2 minggu)
+
+Fokus implementasi (core) dibuat agar bisa selesai dan dites dalam waktu singkat:
+
+1. Login demo (pembeli) → masuk aplikasi
+2. Browse produk → buka detail
+3. Tambah ke keranjang → ubah quantity/hapus → total terhitung
+4. Checkout → terbentuk order
+5. Lihat daftar pesanan
+
+Fitur lain seperti dashboard penjual, peta, dan integrasi pembayaran bersifat pendukung/demo dan bisa diperlakukan sebagai nilai tambah.
 
 ## Ringkasan Arsitektur
 
@@ -76,6 +101,17 @@ Memilih akun demo di layar login akan mengisi kredensial dan langsung mencoba ma
    ```bash
    flutter run -d chrome
    ```
+
+### Backend (opsional)
+
+Project ini memiliki backend Go (folder `backend/`) untuk endpoint pembayaran dan contoh API.
+
+- Untuk menjalankan backend, lihat panduan di `backend/README.md`.
+- Untuk mengarahkan app ke backend tertentu, set base URL:
+
+```bash
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8081
+```
 
 ## Pengujian
 
@@ -170,8 +206,79 @@ Template dan draft laporan untuk memenuhi requirement usability testing dan repo
 
 Untuk ekspor ke PDF, gunakan VS Code extension “Markdown PDF” atau Print to PDF dari preview Markdown.
 
+## Usability Testing (≥ 3 users)
+
+Usability test dasar dilakukan dengan metode moderated + think-aloud.
+
+- Plan: `docs/01_usability_test_plan.md`
+- Results (isi 3 peserta): `docs/02_usability_test_results.md`
+
+Ringkasan yang perlu ada agar sesuai rubric:
+
+- minimal 3 peserta (P1–P3)
+- 5–6 task inti (login, cari/buka produk, add cart, lihat cart, checkout, navigasi)
+- catatan success/help/time + temuan utama
+- daftar perbaikan yang diterapkan setelah test (mapping temuan → perubahan)
+
+## Submission Checklist
+
+- Report 2–3 halaman: `docs/03_report_draft.md` (export ke PDF)
+- Screenshot aplikasi: taruh di `docs/screenshots/` (lihat `docs/screenshots/README.md`)
+- Link repository source code: [ISI_LINK_REPO_DI_SINI]
+
 ## Catatan & Pengembangan Lanjutan
 
-- Data contoh masih tersimpan di memori. Ganti repository dengan sumber data jarak jauh bila ingin persistensi.
-- Marker peta berasal dari `MapRepository`; hubungkan dengan backend atau layanan geolokasi untuk data real-time.
-- Aksi penjual (`Kelola toko`, `Lihat katalog`) masih menjadi placeholder untuk fitur berikutnya.
+Bagian ini merangkum area pengembangan ke depan sekaligus kendala teknis yang perlu diantisipasi.
+
+### Prioritas Perbaikan (Roadmap Singkat)
+
+#### P0 (wajib dibereskan supaya alur inti aman)
+
+- **Checkout yang “transaksional”**
+  - Saat ini alur checkout membuat `Order` dulu lalu membuat invoice. Jika create invoice gagal, order sudah terlanjur tersimpan.
+  - Opsi perbaikan:
+    - Buat order berstatus `UNPAID/PENDING_PAYMENT` lalu update saat pembayaran sukses (via webhook/polling), atau
+    - Buat invoice dulu, baru commit order saat invoice sukses.
+- **Cegah double checkout**
+  - Tombol checkout perlu di-disable ketika request invoice sedang berjalan (gunakan state loading di `PaymentViewModel`) untuk mencegah double-tap / duplicate invoice.
+
+#### P1 (meningkatkan maintainability & kualitas UX)
+
+- **Pindahkan orkestrasi checkout dari View ke ViewModel/UseCase**
+  - Agar UI “tipis”, logic mudah dites, dan penanganan error konsisten.
+- **Perkuat error handling network**
+  - `ApiClient` mengasumsikan response selalu JSON Map; jika backend mengembalikan non-JSON (mis. 502 HTML), akan muncul `FormatException`.
+  - Tambahkan fallback parsing + pesan error yang lebih ramah, serta timeout.
+- **Representasi uang**
+  - Pertimbangkan pakai integer rupiah (mis. `int amount`) atau decimal agar menghindari masalah pembulatan `double`.
+
+#### P2 (fitur lanjutan sesuai scope)
+
+- **Persistensi & sinkronisasi data**
+  - Data contoh saat ini dominan in-memory / local store. Ganti repository dengan API/DB nyata bila ingin multi-device & konsistensi.
+- **Manajemen katalog penjual (CRUD penuh)**
+- **Pembayaran end-to-end** (status pembayaran, webhook handling lengkap, layar riwayat pembayaran)
+- **Notifikasi** (in-app / push) & **chat** (sesuai scope lanjut)
+
+### Kendala & Risiko Teknis yang Umum
+
+- **Konfigurasi backend & port**
+  - Aplikasi membaca `API_BASE_URL` via `--dart-define`. Default saat ini mengarah ke Android emulator (`10.0.2.2`) dan port tertentu.
+  - Pastikan port API yang dijalankan backend cocok dengan konfigurasi aplikasi.
+- **Integrasi Xendit (mode real vs demo)**
+  - Endpoint create invoice butuh `XENDIT_SECRET_KEY` dan (pada implementasi backend saat ini) DB aktif; jika tidak, akan gagal.
+  - Untuk demo kelas, pertimbangkan fallback “mock invoice” bila env belum siap.
+- **Peta / tile OpenStreetMap**
+  - Gunakan secara wajar (hindari trafik berlebihan), dan siapkan opsi tile server sendiri jika dipakai produksi.
+
+### Konfigurasi Environment (Opsional tapi Direkomendasikan)
+
+- **Set base URL API** (contoh saat menjalankan di Android emulator):
+
+```bash
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8081
+```
+
+- **Backend payments (Go)**
+  - Jalankan backend sesuai panduan di `backend/README.md`.
+  - Siapkan env `XENDIT_SECRET_KEY` bila ingin create invoice real.
