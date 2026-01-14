@@ -220,6 +220,16 @@ Ringkasan yang perlu ada agar sesuai rubric:
 - catatan success/help/time + temuan utama
 - daftar perbaikan yang diterapkan setelah test (mapping temuan → perubahan)
 
+### Update Berdasarkan Refleksi AFL1 (Pilot)
+
+Berdasarkan laporan refleksi usability testing AFL1 (moderated + think-aloud), beberapa temuan kunci dan update yang sudah tercermin di aplikasi ini:
+
+- **Form register lebih jelas**: field konfirmasi password sudah diberi label **"Konfirmasi kata sandi"** dan hint **"Ulangi kata sandi"**.
+- **Fitur pencarian lebih terlihat**: halaman beranda menyediakan **search field** yang menonjol (bukan hanya ikon kecil), dengan hint teks dan ikon search.
+- **Navigasi tab bawah intuitif**: perpindahan antar tab utama dinilai mudah dipahami (mengikuti pola umum aplikasi mobile).
+
+Catatan: AFL1 pada laporan refleksi menggunakan 1 partisipan (pilot). Untuk memenuhi requirement tugas, lanjutkan usability test sampai ≥3 partisipan dan isi hasil final di `docs/02_usability_test_results.md`.
+
 ## Submission Checklist
 
 - Report 2–3 halaman: `docs/03_report_draft.md` (export ke PDF)
