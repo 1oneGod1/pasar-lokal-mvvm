@@ -74,23 +74,7 @@ Ringkas poin implementasi utama:
 
 ## 6. Screenshot
 
-Sertakan minimal 4–8 screenshot (lihat `docs/screenshots/README.md`).
-
-- Login
-![alt text](image.png)
-- Beranda / daftar produk
-![alt text](image-1.png)
-- Detail produk
-![alt text](image-2.png)
-- Keranjang / checkout
-![alt text](image-3.png)
-![alt text](image-4.png)
-- Pesanan
-![alt text](image-5.png)
-- Peta
-![alt text](image-6.png)
-- Profil / akun
-![alt text](image-7.png)
+https://github.com/1oneGod1/pasar-lokal-mvvm/tree/main/docs/screenshots 
 
 
 ## 7. Link Repository
