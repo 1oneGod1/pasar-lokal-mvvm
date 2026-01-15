@@ -1,5 +1,6 @@
 import '../models/cart_item.dart';
 import '../models/order.dart';
+import '../models/payment_method.dart';
 import '../models/product.dart';
 import '../models/user.dart';
 
@@ -37,6 +38,34 @@ User userFromMap(Map<dynamic, dynamic> map) {
         (map['sellerId'] as String?)?.isEmpty == true
             ? null
             : map['sellerId'] as String?,
+  );
+}
+
+Map<String, Object?> paymentMethodToMap(PaymentMethod method) {
+  return {
+    'id': method.id,
+    'type': method.type.name,
+    'label': method.label,
+    'accountName': method.accountName,
+    'accountNumber': method.accountNumber,
+    'isDefault': method.isDefault,
+  };
+}
+
+PaymentMethod paymentMethodFromMap(Map<dynamic, dynamic> map) {
+  final typeRaw = (map['type'] ?? PaymentMethodType.bank.name).toString();
+  final type = PaymentMethodType.values.firstWhere(
+    (value) => value.name == typeRaw,
+    orElse: () => PaymentMethodType.bank,
+  );
+
+  return PaymentMethod(
+    id: (map['id'] ?? '').toString(),
+    type: type,
+    label: (map['label'] ?? '').toString(),
+    accountName: (map['accountName'] ?? '').toString(),
+    accountNumber: (map['accountNumber'] ?? '').toString(),
+    isDefault: map['isDefault'] == true,
   );
 }
 

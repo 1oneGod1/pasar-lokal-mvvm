@@ -292,6 +292,32 @@ class AuthRepository {
     await _clearSession();
   }
 
+  Future<User> updateProfile(User updatedUser) async {
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+
+    final index = _credentials.indexWhere((c) => c.user.id == updatedUser.id);
+    if (index != -1) {
+      final existing = _credentials[index];
+      _credentials[index] = _UserCredential(
+        email: updatedUser.email,
+        password: existing.password,
+        user: updatedUser,
+      );
+    }
+
+    final cached = cachedSession;
+    if (cached != null) {
+      final session = AuthSession(
+        user: updatedUser,
+        provider: cached.provider,
+        sessionToken: cached.sessionToken,
+      );
+      await _writeSession(session);
+    }
+
+    return updatedUser;
+  }
+
   String _normalizeEmail(String email) => email.trim().toLowerCase();
 }
 

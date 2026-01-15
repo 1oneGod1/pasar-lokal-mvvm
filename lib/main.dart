@@ -7,6 +7,7 @@ import 'core/repositories/cart_repository.dart';
 import 'core/repositories/category_repository.dart';
 import 'core/repositories/map_repository.dart';
 import 'core/repositories/order_repository.dart';
+import 'core/repositories/payment_method_repository.dart';
 import 'core/repositories/payment_repository.dart';
 import 'core/repositories/product_repository.dart';
 import 'core/repositories/seller_repository.dart';
@@ -24,6 +25,7 @@ import 'features/map/viewmodels/map_view_model.dart';
 import 'features/orders/viewmodels/order_view_model.dart';
 import 'features/orders/views/orders_page.dart';
 import 'features/payments/viewmodels/payment_view_model.dart';
+import 'features/payments/viewmodels/payment_methods_view_model.dart';
 import 'features/products/viewmodels/product_view_model.dart';
 import 'features/profile/views/profile_page.dart';
 import 'features/sellers/viewmodels/seller_view_model.dart';
@@ -112,6 +114,12 @@ class PasarLokalApp extends StatelessWidget {
         ChangeNotifierProvider(
           create:
               (_) => PaymentViewModel(PaymentRepository(apiClient: apiClient)),
+        ),
+        ChangeNotifierProvider(
+          create:
+              (_) => PaymentMethodsViewModel(
+                PaymentMethodRepository(store: store),
+              ),
         ),
         ChangeNotifierProvider(create: (_) => MapViewModel(MapRepository())),
       ],

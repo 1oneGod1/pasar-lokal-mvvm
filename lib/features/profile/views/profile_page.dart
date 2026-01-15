@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:pasar_lokal_mvvm/core/widgets/home_tab_scope.dart';
 import 'package:pasar_lokal_mvvm/core/models/user.dart';
 import 'package:pasar_lokal_mvvm/features/auth/viewmodels/auth_view_model.dart';
+import 'package:pasar_lokal_mvvm/features/payments/views/payment_methods_page.dart';
+import 'package:pasar_lokal_mvvm/features/products/views/seller_catalog_page.dart';
+import 'package:pasar_lokal_mvvm/features/profile/views/edit_profile_page.dart';
+import 'package:pasar_lokal_mvvm/features/profile/views/help_page.dart';
 import 'package:pasar_lokal_mvvm/features/sellers/viewmodels/seller_view_model.dart';
 
 class ProfilePage extends StatelessWidget {
@@ -102,9 +107,34 @@ class ProfilePage extends StatelessWidget {
                 children: [
                   Text('Pengaturan', style: theme.textTheme.titleMedium),
                   const SizedBox(height: 12),
-                  _SettingsButton(label: 'Ubah profil', onTap: () {}),
-                  _SettingsButton(label: 'Metode pembayaran', onTap: () {}),
-                  _SettingsButton(label: 'Bantuan', onTap: () {}),
+                  _SettingsButton(
+                    label: 'Ubah profil',
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const EditProfilePage(),
+                        ),
+                      );
+                    },
+                  ),
+                  _SettingsButton(
+                    label: 'Metode pembayaran',
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const PaymentMethodsPage(),
+                        ),
+                      );
+                    },
+                  ),
+                  _SettingsButton(
+                    label: 'Bantuan',
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const HelpPage()),
+                      );
+                    },
+                  ),
                   const SizedBox(height: 12),
                   FilledButton(
                     onPressed:
@@ -267,14 +297,24 @@ class _StoreSummaryCard extends StatelessWidget {
                   SizedBox(
                     width: 160,
                     child: OutlinedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder:
+                                (_) => SellerCatalogPage(sellerId: store.id),
+                          ),
+                        );
+                      },
                       child: const Text('Lihat katalog'),
                     ),
                   ),
                   SizedBox(
                     width: 160,
                     child: FilledButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        final tabScope = HomeTabScope.maybeOf(context);
+                        tabScope?.onSelectTab(0);
+                      },
                       child: const Text('Kelola toko'),
                     ),
                   ),

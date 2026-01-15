@@ -1,21 +1,16 @@
-# Pasar Lokal MVVM — Brief Report (2–3 pages)
+# Pasar Lokal MVVM — Brief Report (Ringkas)
 
 ## 1) Purpose & Problem Statement
 
-Pasar Lokal MVVM adalah prototipe marketplace berbasis Flutter yang bertujuan membantu pengguna menemukan dan membeli produk lokal secara cepat, sekaligus memberi tampilan dashboard sederhana untuk penjual.
+Pasar Lokal MVVM adalah prototipe marketplace Flutter untuk membantu pembeli menemukan produk lokal dan memberi dashboard sederhana bagi penjual.
 
-**Problem / Need (ringkas):**
+**Problem / Need (ringkas):** Pengguna membutuhkan pengalaman belanja lokal yang cepat, sederhana, dan mudah dinavigasi. Aplikasi ini menyediakan eksplorasi produk, keranjang, checkout, dan pemantauan pesanan dalam satu alur.
 
-- [Isi 2–3 kalimat masalah yang kamu temukan + bagaimana aplikasi ini membantu]
-
-**Target pengguna**:
-
-- Pembeli yang ingin eksplorasi produk lokal + checkout
-- Penjual yang ingin memantau KPI/pesanan (demo)
+**Target pengguna:** pembeli yang ingin belanja produk lokal dan penjual yang memantau katalog/pesanan (demo).
 
 ## 2) Core Features Implemented
 
-Fitur inti yang diselesaikan:
+Fitur inti:
 
 - Auth demo: login pembeli/penjual, register, Google sign-in (demo)
 - Browse produk: daftar produk + detail
@@ -52,13 +47,7 @@ Basic moderated usability test + think-aloud.
 
 ### Participants
 
-3 orang pengguna baru (lihat detail pada file hasil).
-
-Ringkas profil peserta (contoh):
-
-- P1: [role/umur/kebiasaan]
-- P2: [role/umur/kebiasaan]
-- P3: [role/umur/kebiasaan]
+1 peserta (pembeli). Keterbatasan: waktu pengumpulan, belum sempat menambah peserta lain.
 
 ### Tasks
 
@@ -68,22 +57,24 @@ Login, cari produk, tambah keranjang, lihat keranjang, checkout, navigasi tab.
 
 Ringkasan hasil ada di `docs/02_usability_test_results.md`.
 
-**Temuan utama (contoh, sesuaikan):**
+**Temuan utama:**
 
-- Search kurang menonjol → user butuh bantuan
-- Navigasi tab mudah dipahami
+- Desain UI masih kurang rapi menurut peserta.
+- Login Google sempat error.
+- Pesanan setelah checkout tidak bisa diedit.
+- Peta belum real-time.
 
 ### Improvements Applied
 
-- Perubahan 1: [temuan → perubahan] (sertakan screenshot jika ada)
-- Perubahan 2: [temuan → perubahan]
+- Perbaikan alur tambah produk (bottom sheet) agar tidak error saat simpan.
+- Navigasi katalog penjual ditambahkan dari halaman Akun.
 
 Catatan: minimal 1–2 perbaikan setelah testing agar memenuhi requirement “adjustments based on feedback”.
 
 ## 6) Challenges
 
-- [Contoh] Menjaga konsistensi state antar halaman
-- [Contoh] Membuat flow checkout tetap sederhana tapi realistis
+- Menjaga konsistensi state antar halaman (beranda, pesanan, profil).
+- Menjaga alur checkout tetap sederhana namun realistis.
 
 ## 7) Repository & Screenshots
 

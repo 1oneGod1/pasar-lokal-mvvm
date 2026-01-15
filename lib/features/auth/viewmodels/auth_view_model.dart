@@ -169,6 +169,48 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
+  Future<bool> updateProfile({
+    required String name,
+    required String email,
+    required String phone,
+    required String address,
+  }) async {
+    if (_isLoading) return false;
+    final current = _currentUser;
+    if (current == null) return false;
+
+    _setLoading(true);
+    _errorMessage = null;
+
+    try {
+      final updated = User(
+        id: current.id,
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone.trim(),
+        address: address.trim(),
+        memberSince: current.memberSince,
+        role: current.role,
+        sellerId: current.sellerId,
+      );
+
+      final saved = await _repository.updateProfile(updated);
+      _currentUser = saved;
+      _errorMessage = null;
+      _setLoading(false);
+      notifyListeners();
+      return true;
+    } catch (error) {
+      _errorMessage = 'Gagal memperbarui profil.';
+      _setLoading(false);
+      notifyListeners();
+      if (kDebugMode) {
+        print('Update profile error: $error');
+      }
+      return false;
+    }
+  }
+
   void _setLoading(bool value) {
     _isLoading = value;
   }

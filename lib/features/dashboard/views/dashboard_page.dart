@@ -792,232 +792,252 @@ class _SellerDashboard extends StatelessWidget {
   }
 
   Future<void> _openAddProductSheet(BuildContext context) async {
-    final messenger = ScaffoldMessenger.of(context);
     final categories = context.read<CategoryViewModel>().categories;
 
     if (categories.isEmpty) {
-      messenger.showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Buat kategori terlebih dahulu.')),
       );
       return;
     }
 
-    final formKey = GlobalKey<FormState>();
-    final nameController = TextEditingController();
-    final priceController = TextEditingController();
-    final stockController = TextEditingController();
-    final imageUrlController = TextEditingController();
-    final descriptionController = TextEditingController();
-
-    String selectedCategoryId = categories.first.id;
-
-    await showModalBottomSheet<void>(
+    final created = await showModalBottomSheet<Product>(
       context: context,
       isScrollControlled: true,
       backgroundColor: theme.colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (sheetContext) {
-        final bottomInset = MediaQuery.of(sheetContext).viewInsets.bottom;
-        return SafeArea(
-          top: false,
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottomInset),
-            child: StatefulBuilder(
-              builder: (context, setState) {
-                return Form(
-                  key: formKey,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                'Tambah Produk',
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              tooltip: 'Tutup',
-                              onPressed: () => Navigator.of(sheetContext).pop(),
-                              icon: const Icon(Icons.close_rounded),
-                            ),
-                          ],
-                        ),
-                        Text(
-                          'Isi detail produk yang akan dijual.',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.outline,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: nameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Nama produk',
-                            prefixIcon: Icon(Icons.inventory_2_outlined),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Nama produk wajib diisi.';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextFormField(
-                                controller: priceController,
-                                keyboardType: TextInputType.number,
-                                decoration: const InputDecoration(
-                                  labelText: 'Harga (Rp)',
-                                  prefixIcon: Icon(Icons.payments_outlined),
-                                ),
-                                validator: (value) {
-                                  final parsed = double.tryParse(
-                                    (value ?? '').trim(),
-                                  );
-                                  if (parsed == null || parsed <= 0) {
-                                    return 'Harga tidak valid.';
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: TextFormField(
-                                controller: stockController,
-                                keyboardType: TextInputType.number,
-                                decoration: const InputDecoration(
-                                  labelText: 'Stok',
-                                  prefixIcon: Icon(Icons.numbers_outlined),
-                                ),
-                                validator: (value) {
-                                  final parsed = int.tryParse(
-                                    (value ?? '').trim(),
-                                  );
-                                  if (parsed == null || parsed < 0) {
-                                    return 'Stok tidak valid.';
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        DropdownButtonFormField<String>(
-                          value: selectedCategoryId,
-                          decoration: const InputDecoration(
-                            labelText: 'Kategori',
-                            prefixIcon: Icon(Icons.category_outlined),
-                          ),
-                          items:
-                              categories
-                                  .map(
-                                    (category) => DropdownMenuItem(
-                                      value: category.id,
-                                      child: Text(category.name),
-                                    ),
-                                  )
-                                  .toList(),
-                          onChanged: (value) {
-                            if (value == null) return;
-                            setState(() => selectedCategoryId = value);
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: imageUrlController,
-                          decoration: const InputDecoration(
-                            labelText: 'URL foto (opsional)',
-                            prefixIcon: Icon(Icons.image_outlined),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: descriptionController,
-                          maxLines: 3,
-                          decoration: const InputDecoration(
-                            labelText: 'Deskripsi (opsional)',
-                            alignLabelWithHint: true,
-                            prefixIcon: Icon(Icons.notes_outlined),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          child: FilledButton(
-                            onPressed: () {
-                              if (formKey.currentState?.validate() != true) {
-                                return;
-                              }
-
-                              final price =
-                                  double.tryParse(
-                                    priceController.text.trim(),
-                                  ) ??
-                                  0;
-                              final stock =
-                                  int.tryParse(stockController.text.trim()) ??
-                                  0;
-
-                              final created = Product(
-                                id:
-                                    'prod-${DateTime.now().millisecondsSinceEpoch}',
-                                name: nameController.text.trim(),
-                                categoryId: selectedCategoryId,
-                                sellerId: user.sellerId ?? '',
-                                price: price,
-                                stock: stock,
-                                description: descriptionController.text.trim(),
-                                imageUrl: imageUrlController.text.trim(),
-                              );
-
-                              context.read<ProductViewModel>().addProduct(
-                                created,
-                              );
-                              messenger.showSnackBar(
-                                SnackBar(
-                                  content: Text('${created.name} ditambahkan.'),
-                                ),
-                              );
-                              Navigator.of(sheetContext).pop();
-                            },
-                            style: FilledButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
-                            child: const Text('Simpan Produk'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
+      builder:
+          (_) => _AddProductSheet(
+            categories: categories.toList(),
+            sellerId: user.sellerId ?? '',
           ),
-        );
-      },
     );
 
-    nameController.dispose();
-    priceController.dispose();
-    stockController.dispose();
-    imageUrlController.dispose();
-    descriptionController.dispose();
+    if (!context.mounted) {
+      return;
+    }
+
+    if (created != null) {
+      context.read<ProductViewModel>().addProduct(created);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('${created.name} ditambahkan.')));
+    }
+  }
+}
+
+class _AddProductSheet extends StatefulWidget {
+  const _AddProductSheet({required this.categories, required this.sellerId});
+
+  final List<Category> categories;
+  final String sellerId;
+
+  @override
+  State<_AddProductSheet> createState() => _AddProductSheetState();
+}
+
+class _AddProductSheetState extends State<_AddProductSheet> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _priceController = TextEditingController();
+  final _stockController = TextEditingController();
+  final _imageUrlController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  late String _selectedCategoryId;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedCategoryId = widget.categories.first.id;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _priceController.dispose();
+    _stockController.dispose();
+    _imageUrlController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottomInset),
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Tambah Produk',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Tutup',
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+                  ],
+                ),
+                Text(
+                  'Isi detail produk yang akan dijual.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: scheme.outline,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Nama produk',
+                    prefixIcon: Icon(Icons.inventory_2_outlined),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Nama produk wajib diisi.';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _priceController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Harga (Rp)',
+                          prefixIcon: Icon(Icons.payments_outlined),
+                        ),
+                        validator: (value) {
+                          final parsed = double.tryParse((value ?? '').trim());
+                          if (parsed == null || parsed <= 0) {
+                            return 'Harga tidak valid.';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _stockController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Stok',
+                          prefixIcon: Icon(Icons.numbers_outlined),
+                        ),
+                        validator: (value) {
+                          final parsed = int.tryParse((value ?? '').trim());
+                          if (parsed == null || parsed < 0) {
+                            return 'Stok tidak valid.';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: _selectedCategoryId,
+                  decoration: const InputDecoration(
+                    labelText: 'Kategori',
+                    prefixIcon: Icon(Icons.category_outlined),
+                  ),
+                  items:
+                      widget.categories
+                          .map(
+                            (category) => DropdownMenuItem(
+                              value: category.id,
+                              child: Text(category.name),
+                            ),
+                          )
+                          .toList(),
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setState(() => _selectedCategoryId = value);
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _imageUrlController,
+                  decoration: const InputDecoration(
+                    labelText: 'URL foto (opsional)',
+                    prefixIcon: Icon(Icons.image_outlined),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _descriptionController,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    labelText: 'Deskripsi (opsional)',
+                    alignLabelWithHint: true,
+                    prefixIcon: Icon(Icons.notes_outlined),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () {
+                      if (_formKey.currentState?.validate() != true) {
+                        return;
+                      }
+
+                      final price =
+                          double.tryParse(_priceController.text.trim()) ?? 0;
+                      final stock =
+                          int.tryParse(_stockController.text.trim()) ?? 0;
+
+                      final created = Product(
+                        id: 'prod-${DateTime.now().millisecondsSinceEpoch}',
+                        name: _nameController.text.trim(),
+                        categoryId: _selectedCategoryId,
+                        sellerId: widget.sellerId,
+                        price: price,
+                        stock: stock,
+                        description: _descriptionController.text.trim(),
+                        imageUrl: _imageUrlController.text.trim(),
+                      );
+
+                      Navigator.of(context).pop(created);
+                    },
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: const Text('Simpan Produk'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
