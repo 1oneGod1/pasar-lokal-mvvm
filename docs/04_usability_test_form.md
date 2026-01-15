@@ -50,3 +50,14 @@ Tandai selesai (✅) dan catat masalah jika ada.
 ## Feedback Tambahan
 
 UI masih kurang rapi. Login Google sempat error. Pesanan setelah checkout tidak bisa diedit. Peta belum real-time.
+
+## Screenshot (Bukti Uji)
+
+- [docs/screenshots/image.png](docs/screenshots/image.png)
+- [docs/screenshots/image-1.png](docs/screenshots/image-1.png)
+- [docs/screenshots/image-2.png](docs/screenshots/image-2.png)
+- [docs/screenshots/image-3.png](docs/screenshots/image-3.png)
+- [docs/screenshots/image-4.png](docs/screenshots/image-4.png)
+- [docs/screenshots/image-5.png](docs/screenshots/image-5.png)
+- [docs/screenshots/image-6.png](docs/screenshots/image-6.png)
+- [docs/screenshots/image-7.png](docs/screenshots/image-7.png)
